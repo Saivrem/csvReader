@@ -40,14 +40,14 @@ public class CsvReader implements AutoCloseable {
     private Character previousChar;
 
     //logical flags
-    boolean escapedField;
-    boolean stepForward = false;
+    private boolean escapedField = false;
+    private boolean stepForward = false;
 
     /**
      * Number of cells in a header, user to ensure all rows have same number of cells;
      * Otherwise exception will be thrown.
      */
-    private int symmetryCheck = 0;
+    protected int symmetryCheck = 0;
 
 
     /**
@@ -65,7 +65,6 @@ public class CsvReader implements AutoCloseable {
 
     /**
      * Reads one row from CSV file and returns it as LinkedList of Strings
-     * May produce Null pointer Exception
      *
      * @return LinkedList&lt;String&gt;
      * @throws BrokenCsvStructureException custom exception, see exceptions.BrokenCsvStrictureException
@@ -79,7 +78,15 @@ public class CsvReader implements AutoCloseable {
             cells = new LinkedList<>();
             cell = new StringBuilder();
         } else if (line == null) {
-            return null;
+            cells.add(cell.toString());
+            throw new BrokenCsvStructureException(
+                    null,
+                    0,
+                    symmetryCheck,
+                    cells.size(),
+                    cells.toString(),
+                    BrokenCsvStructureException.Cause.STRUCTURE
+            );
         }
 
         char[] array = line.toCharArray();

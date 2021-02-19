@@ -14,12 +14,11 @@ import java.util.LinkedList;
 
 public class CsvReaderTest {
 
-    private static final ArrayList<String> inputPositiveCases = new ArrayList<>();
-    private static final ArrayList<String> inputNegativeCases = new ArrayList<>();
-    private static final HashMap<String, LinkedList<String>> positiveResults = new HashMap<>();
+    @Test
+    public void positiveTestReadLineWithEscape() {
+        ArrayList<String> inputPositiveCases = new ArrayList<>();
+        HashMap<String, LinkedList<String>> positiveResults = new HashMap<>();
 
-    static {
-        //positive
         inputPositiveCases.add("a,b,c");
         inputPositiveCases.add("a,\"b\",c");
         inputPositiveCases.add("\"a\",\"b\",\"c\"");
@@ -37,17 +36,6 @@ public class CsvReaderTest {
         positiveResults.put("\"a,\",\"b\nb\",\"c\t,\n\"", new LinkedList<>(Arrays.asList("a,", "b\nb", "c\t,\n")));
         positiveResults.put("a,\"b\"\"b\",c", new LinkedList<>(Arrays.asList("a", "b\"b", "c")));
         positiveResults.put("a,\"\"\"bb\"\"\",c", new LinkedList<>(Arrays.asList("a", "\"bb\"", "c")));
-
-        //negative
-        inputNegativeCases.add("a,\"\"b\"\",c");
-        inputNegativeCases.add("a,\"\"b,c");
-        inputNegativeCases.add("a,b\"\",c");
-        inputNegativeCases.add("a,\"b,c");
-    }
-
-
-    @Test
-    public void positiveTestReadLine() {
 
         for (String str : inputPositiveCases) {
 
@@ -79,7 +67,13 @@ public class CsvReaderTest {
     }
 
     @Test
-    public void negativeTestReadLine() {
+    public void negativeTestReadLineWithEscape() {
+        ArrayList<String> inputNegativeCases = new ArrayList<>();
+        inputNegativeCases.add("a,\"\"b\"\",c");
+        inputNegativeCases.add("a,\"\"b,c");
+        inputNegativeCases.add("a,b\"\",c");
+        inputNegativeCases.add("a,\"b,c");
+        inputNegativeCases.add("a,\"b,c\n");
         for (String str : inputNegativeCases) {
             try (
                     CsvReader csvReader = new CsvReader(
@@ -88,10 +82,77 @@ public class CsvReaderTest {
                             ), ',', '\"')
             ) {
                 LinkedList<String> strings = csvReader.readLine();
-                Assert.fail("No exception thrown");
+                Assert.fail("No exception thrown\n" + strings.toString());
             } catch (BrokenCsvStructureException | IOException e) {
                 if (!(e instanceof BrokenCsvStructureException)) {
                     Assert.fail("Wrong Exception");
+                } else {
+                    System.out.println(((BrokenCsvStructureException) e).getCustomMessage());
+                }
+            }
+        }
+    }
+
+    @Test
+    public void positiveTestReadLineWOEscape() {
+        ArrayList<String> inputPositiveCases = new ArrayList<>();
+        HashMap<String, LinkedList<String>> positiveResults = new HashMap<>();
+
+        inputPositiveCases.add("a,b,c");
+        inputPositiveCases.add("a,b\",c");
+        inputPositiveCases.add("\"a,b,c");
+        inputPositiveCases.add("\"a\",\"b\",\"c\"");
+
+        positiveResults.put("a,b,c", new LinkedList<>(Arrays.asList("a", "b", "c")));
+        positiveResults.put("a,b\",c", new LinkedList<>(Arrays.asList("a", "b\"", "c")));
+        positiveResults.put("\"a,b,c", new LinkedList<>(Arrays.asList("\"a", "b", "c")));
+        positiveResults.put("\"a\",\"b\",\"c\"", new LinkedList<>(Arrays.asList("\"a\"", "\"b\"", "\"c\"")));
+
+        for (String str : inputPositiveCases) {
+
+            try (CsvReader csvReader = new CsvReader(
+                    new BufferedReader(
+                            new StringReader(str)
+                    ), ',', null)
+            ) {
+                LinkedList<String> strings = csvReader.readLine();
+                LinkedList<String> expected = positiveResults.get(str);
+                if (strings.size() != 3) {
+                    Assert.fail("wrong elements count");
+                }
+
+                Assert.assertEquals(strings, expected);
+                System.out.printf("String: %s\n", str.replaceAll("\n", "\\\\n"));
+                System.out.printf("Actual -> %s - %s <- Expected\n", strings.toString().replaceAll("\n", "\\\\n"), expected.toString().replaceAll("\n", "\\\\n"));
+
+            } catch (BrokenCsvStructureException | IOException | NullPointerException e) {
+                if (e instanceof BrokenCsvStructureException) {
+                    String message = ((BrokenCsvStructureException) e).getCustomMessage();
+                    Assert.fail(message);
+                } else {
+                    e.printStackTrace();
+                    Assert.fail("Exception was thrown");
+                }
+            }
+        }
+    }
+
+    @Test
+    public void negativeTestReadLineWOEscape() {
+        ArrayList<String> inputNegativeCases = new ArrayList<>();
+        inputNegativeCases.add("a,b,b,c");
+        for (String str : inputNegativeCases) {
+            try (CsvReader csvReader = new CsvReader(
+                    new BufferedReader(
+                            new StringReader(str)
+                    ), ',', null)
+            ) {
+                csvReader.symmetryCheck = 3;
+                LinkedList<String> strings = csvReader.readLine();
+                Assert.fail("No Exception thrown\n" + strings.toString());
+            } catch (BrokenCsvStructureException | IOException e) {
+                if (!(e instanceof BrokenCsvStructureException)) {
+                    Assert.fail("Wrong exception");
                 } else {
                     System.out.println(((BrokenCsvStructureException) e).getCustomMessage());
                 }
