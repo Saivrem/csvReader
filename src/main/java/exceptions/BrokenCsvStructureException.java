@@ -1,5 +1,10 @@
 package exceptions;
 
+/**
+ * Custom exception, could be caused by different CSV issues;
+ * Broken Escaped fields;
+ * Broken document structure (number of columns is different);
+ */
 public class BrokenCsvStructureException extends Exception {
 
     /**

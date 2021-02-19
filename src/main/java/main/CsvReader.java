@@ -5,19 +5,22 @@ import exceptions.BrokenCsvStructureException;
 import java.io.*;
 import java.util.LinkedList;
 
+/**
+ * Utility class, works similarly to Reader but with CSV files.
+ */
 public class CsvReader implements AutoCloseable {
 
-    // TODO Make this optional, need to Extend io.Reader and Wrap it with BufferedReader On demand.
     /**
      * FileReader
      */
+    // TODO Make this optional, need to Extend io.Reader and Wrap it with BufferedReader On demand.
     private final BufferedReader fileReader;
     /**
      * Delimiter
      */
     private final Character delimiter;
     /**
-     * escape
+     * Escape
      */
     private final Character escapeChar;
 
@@ -64,7 +67,7 @@ public class CsvReader implements AutoCloseable {
      * Reads one row from CSV file and returns it as LinkedList of Strings
      * May produce Null pointer Exception
      *
-     * @return LinkedList&gt;String&lt;
+     * @return LinkedList&lt;String&gt;
      * @throws BrokenCsvStructureException custom exception, see exceptions.BrokenCsvStrictureException
      * @throws IOException                 I\O Exception
      */
