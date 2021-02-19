@@ -7,11 +7,11 @@ import java.util.LinkedList;
 
 public class Main {
     public static void main(String[] args) {
-        //First - BufferedReader with CSV, second - delimiter, third - escape (nullable)
         try (CsvReader reader = new CsvReader(
+                       // File to read
                 new BufferedReader(new FileReader("/home/user/test.csv")),
-                ',',   // delimiter
-                null   // escape
+                ',',   // Delimiter
+                null   // Escape
         )) {
             while (reader.ready()) {
                 LinkedList<String> row = reader.readLine();
