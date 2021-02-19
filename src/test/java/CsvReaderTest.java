@@ -66,7 +66,13 @@ public class CsvReaderTest {
                 System.out.printf("Actual -> %s - %s <- Expected\n", strings.toString().replaceAll("\n", "\\\\n"), expected.toString().replaceAll("\n", "\\\\n"));
 
             } catch (BrokenCsvStructureException | IOException | NullPointerException e) {
-                e.printStackTrace();
+                if (e instanceof BrokenCsvStructureException) {
+                    String message = ((BrokenCsvStructureException) e).getCustomMessage();
+                    Assert.fail(message);
+                } else {
+                    e.printStackTrace();
+                    Assert.fail("Exception was thrown");
+                }
             }
         }
     }

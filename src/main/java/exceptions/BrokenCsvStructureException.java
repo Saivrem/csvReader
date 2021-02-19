@@ -2,14 +2,17 @@ package exceptions;
 
 public class BrokenCsvStructureException extends Exception {
 
-    public static enum Cause {
+    /**
+     * Error causes
+     */
+    public enum Cause {
         ESCAPE,
         COLUMNS,
         STRUCTURE
     }
 
     private static final String ESCAPE_CHAR_PATTERN = "Escape character in unexpected place:\n%s\nCharacter Pos: %d";
-    private static final String COLUMNS_NUMBER = "Expected columns number is %d\nActual is %d\n\nLine: %s\nCells: %s\n";
+    private static final String COL_NUM_PATTERN = "Expected columns number is %d\nActual is %d\n\nLine: %s\nCells: %s\n";
     private static final String STRUCTURE_PATTERN = "Structure is broken, escaped field is not closed properly\n" +
             "Line: %s\nLast index of delimiter: %d\nRow read: %s\n";
 
@@ -30,7 +33,7 @@ public class BrokenCsvStructureException extends Exception {
                 this.customMessage = String.format(ESCAPE_CHAR_PATTERN, line, charIndex);
                 break;
             case COLUMNS:
-                this.customMessage = String.format(COLUMNS_NUMBER, symmetryCheck, rowSize, line, row);
+                this.customMessage = String.format(COL_NUM_PATTERN, symmetryCheck, rowSize, line, row);
                 break;
             case STRUCTURE:
                 this.customMessage = String.format(STRUCTURE_PATTERN, line, charIndex, row);
@@ -39,6 +42,10 @@ public class BrokenCsvStructureException extends Exception {
         }
     }
 
+    /**
+     * Getter for custom message;
+     * @return String with custom message;
+     */
     public String getCustomMessage() {
         return customMessage;
     }

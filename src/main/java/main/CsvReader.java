@@ -7,65 +7,85 @@ import java.util.LinkedList;
 
 public class CsvReader implements AutoCloseable {
 
+    // TODO Make this optional, need to Extend io.Reader and Wrap it with BufferedReader On demand.
     /**
-     * Initial settings
+     * FileReader
      */
-
+    private final BufferedReader fileReader;
+    /**
+     * Delimiter
+     */
     private final Character delimiter;
-    private final Character escapeChar;
-    private int symmetryCheck = 0;
-
     /**
-     * Read Line global variables;
+     * escape
      */
-    private Character currentChar;
+    private final Character escapeChar;
+
+    // Below will be readLine() global variables;
+    /**
+     * Row
+     */
     private LinkedList<String> cells;
+    /**
+     * Cell
+     */
     private StringBuilder cell;
+
+    //Characters
+    private Character currentChar;
     private Character nextChar;
     private Character previousChar;
-    boolean escapedField;
 
+    //logical flags
+    boolean escapedField;
     boolean stepForward = false;
 
+    /**
+     * Number of cells in a header, user to ensure all rows have same number of cells;
+     * Otherwise exception will be thrown.
+     */
+    private int symmetryCheck = 0;
 
-    // TODO Make this optional, need to Extend io.Reader and Wrap it with BufferedReader On demand.
-    private final BufferedReader reader;
 
+    /**
+     * Constructor
+     *
+     * @param fileReader BufferedReader Object
+     * @param delimiter  Character or char for delimiting symbol
+     * @param escapeChar Character or char for escape symbol
+     */
     public CsvReader(BufferedReader fileReader, Character delimiter, Character escapeChar) {
         this.delimiter = delimiter;
         this.escapeChar = escapeChar;
-        this.reader = fileReader;
+        this.fileReader = fileReader;
     }
 
     /**
      * Reads one row from CSV file and returns it as LinkedList of Strings
+     * May produce Null pointer Exception
+     *
      * @return LinkedList&gt;String&lt;
      * @throws BrokenCsvStructureException custom exception, see exceptions.BrokenCsvStrictureException
-     * @throws IOException I\O Exception
+     * @throws IOException                 I\O Exception
      */
     public LinkedList<String> readLine() throws BrokenCsvStructureException, IOException {
 
-        String line = reader.readLine();
-
-        if (escapedField && line == null) {
-            return null;
-        }
+        String line = fileReader.readLine();
 
         if (!escapedField) {
             cells = new LinkedList<>();
             cell = new StringBuilder();
+        } else if (line == null) {
+            return null;
         }
 
         char[] array = line.toCharArray();
-
 
         for (int i = 0; i < array.length; i++) {
 
             currentChar = array[i];
             nextChar = i < array.length - 1 ? array[i + 1] : null;
-
             previousChar = i > 0 ? array[i - 1] : null;
-
 
             if (currentChar == delimiter) {
                 processDelimiter();
@@ -81,7 +101,7 @@ public class CsvReader implements AutoCloseable {
         }
 
         if (escapedField) {
-            if (reader.ready()) {
+            if (fileReader.ready()) {
                 cell.append("\n");
                 LinkedList<String> marker = readLine();
                 if (marker == null) {
@@ -199,13 +219,16 @@ public class CsvReader implements AutoCloseable {
      * @throws IOException original method is doing the same.
      */
     public boolean ready() throws IOException {
-        return reader.ready();
+        return fileReader.ready();
     }
 
+    /**
+     * Support for autocloseable interface;
+     */
     @Override
     public void close() {
         try {
-            reader.close();
+            fileReader.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
