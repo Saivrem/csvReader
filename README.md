@@ -10,8 +10,8 @@ public class Main {
         //First - BufferedReader with CSV, second - delimiter, third - escape (nullable)
         try (CsvReader reader = new CsvReader(
                 new BufferedReader(new FileReader("/home/user/test.csv")),
-                ',',
-                null
+                ',',   // delimiter
+                null   // escape
         )) {
             while (reader.ready()) {
                 LinkedList<String> row = reader.readLine();
