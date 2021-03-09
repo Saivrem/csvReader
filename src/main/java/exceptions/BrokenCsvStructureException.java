@@ -1,20 +1,13 @@
 package exceptions;
 
+import enums.Cause;
+
 /**
  * Custom exception, could be caused by different CSV issues;
  * Broken Escaped fields;
  * Broken document structure (number of columns is different);
  */
 public class BrokenCsvStructureException extends Exception {
-
-    /**
-     * Error causes
-     */
-    public enum Cause {
-        ESCAPE,
-        COLUMNS,
-        STRUCTURE
-    }
 
     private static final String ESCAPE_CHAR_PATTERN = "Escape character in unexpected place:\n%s\nCharacter Pos: %d";
     private static final String COL_NUM_PATTERN = "Expected columns number is %d\nActual is %d\n\nLine: %s\nCells: %s\n";
@@ -43,7 +36,6 @@ public class BrokenCsvStructureException extends Exception {
             case STRUCTURE:
                 this.customMessage = String.format(STRUCTURE_PATTERN, line, charIndex, row);
                 break;
-
         }
     }
 

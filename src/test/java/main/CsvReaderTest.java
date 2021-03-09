@@ -4,9 +4,8 @@ import exceptions.BrokenCsvStructureException;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.StringReader;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -157,6 +156,44 @@ public class CsvReaderTest {
                     System.out.println(((BrokenCsvStructureException) e).getCustomMessage());
                 }
             }
+        }
+    }
+
+    @Test
+    public void testContinuousExceptionThrow() {
+        ArrayList<String> listWithExceptions = new ArrayList<>();
+        ArrayList<LinkedList<String>> correctRows = new ArrayList<>();
+        listWithExceptions.add("\"first\",\"second\"broken,third");
+        listWithExceptions.add("\"correctFirst\",\"correctSec ond,\",\"correct Third\"");
+
+        correctRows.add(new LinkedList<>(Arrays.asList("correctFirst", "correctSec ond,", "correct Third")));
+
+        StringBuilder builder = new StringBuilder();
+        for (String str : listWithExceptions) {
+            builder.append(str).append("\n");
+        }
+
+        InputStream inputStream = new ByteArrayInputStream(builder.toString().getBytes(StandardCharsets.UTF_8));
+
+        try (CsvReader csvReader = new CsvReader(
+                new BufferedReader(new InputStreamReader(inputStream)),
+                ',',
+                '\"'
+        )) {
+            while (csvReader.ready()) {
+                try {
+                    LinkedList<String> row = csvReader.readLine();
+                    Assert.assertEquals(row, correctRows.get(0));
+                } catch (BrokenCsvStructureException | IOException exception) {
+                    if (exception instanceof BrokenCsvStructureException) {
+                        System.out.println(((BrokenCsvStructureException) exception).getCustomMessage());
+                    } else {
+                        Assert.fail("Wrong exception withing While");
+                    }
+                }
+            }
+        } catch (IOException exception) {
+            Assert.fail("Wrong exception");
         }
     }
 

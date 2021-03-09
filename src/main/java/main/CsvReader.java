@@ -1,8 +1,10 @@
 package main;
 
+import enums.Cause;
 import exceptions.BrokenCsvStructureException;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.util.LinkedList;
 
 /**
@@ -79,16 +81,10 @@ public class CsvReader implements AutoCloseable {
             cell = new StringBuilder();
         } else if (line == null) {
             cells.add(cell.toString());
-            throw new BrokenCsvStructureException(
-                    null,
-                    0,
-                    symmetryCheck,
-                    cells.size(),
-                    cells.toString(),
-                    BrokenCsvStructureException.Cause.STRUCTURE
-            );
+            throwException(null, 0, Cause.STRUCTURE);
         }
 
+        assert line != null;
         char[] array = line.toCharArray();
 
         for (int i = 0; i < array.length; i++) {
@@ -116,22 +112,10 @@ public class CsvReader implements AutoCloseable {
                 LinkedList<String> marker = readLine();
                 if (marker == null) {
                     cells.add(cell.toString().replaceAll("\n", ""));
-                    throw new BrokenCsvStructureException(
-                            line,
-                            line.lastIndexOf(escapeChar),
-                            symmetryCheck,
-                            cells.size(),
-                            cells.toString(),
-                            BrokenCsvStructureException.Cause.STRUCTURE
-                    );
+                    throwException(line, line.lastIndexOf(escapeChar), Cause.STRUCTURE);
                 }
             } else {
-                throw new BrokenCsvStructureException(line,
-                        line.lastIndexOf(escapeChar),
-                        symmetryCheck,
-                        cells.size(),
-                        cells.toString(),
-                        BrokenCsvStructureException.Cause.ESCAPE);
+                throwException(line, line.lastIndexOf(escapeChar), Cause.ESCAPE);
             }
         } else if ((previousChar != null && previousChar.equals(delimiter)) ||
                 (cell.toString().length() > 0 && !(currentChar.equals(escapeChar)))) {
@@ -169,12 +153,7 @@ public class CsvReader implements AutoCloseable {
             if (i == 0 || (previousChar.equals(delimiter))) {
                 escapedField = true;
             } else {
-                throw new BrokenCsvStructureException(line,
-                        i,
-                        symmetryCheck,
-                        cells.size(),
-                        cells.toString(),
-                        BrokenCsvStructureException.Cause.ESCAPE);
+                throwException(line, i, Cause.ESCAPE);
             }
         } else {
             if (nextChar != null) {
@@ -184,14 +163,7 @@ public class CsvReader implements AutoCloseable {
                 } else if (nextChar.equals(delimiter)) {
                     escapedField = false;
                 } else {
-                    throw new BrokenCsvStructureException(
-                            line,
-                            i,
-                            symmetryCheck,
-                            cells.size(),
-                            cells.toString(),
-                            BrokenCsvStructureException.Cause.ESCAPE
-                    );
+                    throwException(line, i, Cause.ESCAPE);
                 }
             } else {
                 cells.add(cell.toString());
@@ -212,13 +184,7 @@ public class CsvReader implements AutoCloseable {
         if (symmetryCheck == 0) {
             symmetryCheck = cells.size();
         } else if (symmetryCheck != cells.size()) {
-            throw new BrokenCsvStructureException(line,
-                    null,
-                    symmetryCheck,
-                    cells.size(),
-                    cells.toString(),
-                    BrokenCsvStructureException.Cause.COLUMNS
-            );
+            throwException(line, null, Cause.COLUMNS);
         }
     }
 
@@ -242,5 +208,22 @@ public class CsvReader implements AutoCloseable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Single endpoint to exception throwing
+     * @param line line caused exception
+     * @param charIndex index of invalid character if possible to detect
+     * @param cause enum of Cause
+     * @throws BrokenCsvStructureException this method is supposed to throw one
+     */
+    private void throwException(String line, Integer charIndex, Cause cause) throws BrokenCsvStructureException {
+        escapedField = false;
+        stepForward = false;
+        throw new BrokenCsvStructureException(line,
+                charIndex,
+                symmetryCheck, cells.size(),
+                cells.toString(),
+                cause);
     }
 }
