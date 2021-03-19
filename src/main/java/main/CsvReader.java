@@ -75,7 +75,6 @@ public class CsvReader implements AutoCloseable {
     public LinkedList<String> readLine() throws BrokenCsvStructureException, IOException {
 
         String line = fileReader.readLine();
-
         if (!escapedField) {
             cells = new LinkedList<>();
             cell = new StringBuilder();
@@ -88,7 +87,6 @@ public class CsvReader implements AutoCloseable {
         char[] array = line.toCharArray();
 
         for (int i = 0; i < array.length; i++) {
-
             currentChar = array[i];
             nextChar = i < array.length - 1 ? array[i + 1] : null;
             previousChar = i > 0 ? array[i - 1] : null;
@@ -117,8 +115,13 @@ public class CsvReader implements AutoCloseable {
             } else {
                 throwException(line, line.lastIndexOf(escapeChar), Cause.ESCAPE);
             }
-        } else if ((previousChar != null && previousChar.equals(delimiter)) ||
-                (cell.toString().length() > 0 && !(currentChar.equals(escapeChar)))) {
+        } else if (
+                (currentChar.equals(delimiter)) ||
+                        //this line originally was here, however, it seems to be not needed anymore with
+                        //the first condition. I have commented it just in case I'll find where it will be needed
+                        //(previousChar != null && previousChar.equals(delimiter)) ||
+                        (cell.toString().length() > 0 && !(currentChar.equals(escapeChar)))
+        ) {
             cells.add(cell.toString());
         }
 
@@ -210,13 +213,6 @@ public class CsvReader implements AutoCloseable {
         }
     }
 
-    /**
-     * Single endpoint to exception throwing
-     * @param line line caused exception
-     * @param charIndex index of invalid character if possible to detect
-     * @param cause enum of Cause
-     * @throws BrokenCsvStructureException this method is supposed to throw one
-     */
     private void throwException(String line, Integer charIndex, Cause cause) throws BrokenCsvStructureException {
         escapedField = false;
         stepForward = false;

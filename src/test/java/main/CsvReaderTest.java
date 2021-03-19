@@ -26,6 +26,8 @@ public class CsvReaderTest {
         inputPositiveCases.add("\"a,\",\"b\nb\",\"c\t,\n\"");
         inputPositiveCases.add("a,\"b\"\"b\",c");
         inputPositiveCases.add("a,\"\"\"bb\"\"\",c");
+        inputPositiveCases.add("\"a\",\"\",");
+        inputPositiveCases.add("\"a\n\",,");
 
         positiveResults.put("a,b,c", new LinkedList<>(Arrays.asList("a", "b", "c")));
         positiveResults.put("a,\"b\",c", new LinkedList<>(Arrays.asList("a", "b", "c")));
@@ -35,6 +37,8 @@ public class CsvReaderTest {
         positiveResults.put("\"a,\",\"b\nb\",\"c\t,\n\"", new LinkedList<>(Arrays.asList("a,", "b\nb", "c\t,\n")));
         positiveResults.put("a,\"b\"\"b\",c", new LinkedList<>(Arrays.asList("a", "b\"b", "c")));
         positiveResults.put("a,\"\"\"bb\"\"\",c", new LinkedList<>(Arrays.asList("a", "\"bb\"", "c")));
+        positiveResults.put("\"a\",\"\",", new LinkedList<>(Arrays.asList("a", "", "")));
+        positiveResults.put("\"a\n\",,", new LinkedList<>(Arrays.asList("a\n", "", "")));
 
         for (String str : inputPositiveCases) {
 
@@ -50,9 +54,6 @@ public class CsvReaderTest {
                 }
 
                 Assert.assertEquals(strings, expected);
-                System.out.printf("String: %s\n", str.replaceAll("\n", "\\\\n"));
-                System.out.printf("Actual -> %s - %s <- Expected\n", strings.toString().replaceAll("\n", "\\\\n"), expected.toString().replaceAll("\n", "\\\\n"));
-
             } catch (BrokenCsvStructureException | IOException | NullPointerException e) {
                 if (e instanceof BrokenCsvStructureException) {
                     String message = ((BrokenCsvStructureException) e).getCustomMessage();
@@ -98,11 +99,13 @@ public class CsvReaderTest {
         HashMap<String, LinkedList<String>> positiveResults = new HashMap<>();
 
         inputPositiveCases.add("a,b,c");
+        inputPositiveCases.add("a,,");
         inputPositiveCases.add("a,b\",c");
         inputPositiveCases.add("\"a,b,c");
         inputPositiveCases.add("\"a\",\"b\",\"c\"");
 
         positiveResults.put("a,b,c", new LinkedList<>(Arrays.asList("a", "b", "c")));
+        positiveResults.put("a,,", new LinkedList<>(Arrays.asList("a", "", "")));
         positiveResults.put("a,b\",c", new LinkedList<>(Arrays.asList("a", "b\"", "c")));
         positiveResults.put("\"a,b,c", new LinkedList<>(Arrays.asList("\"a", "b", "c")));
         positiveResults.put("\"a\",\"b\",\"c\"", new LinkedList<>(Arrays.asList("\"a\"", "\"b\"", "\"c\"")));
@@ -121,8 +124,6 @@ public class CsvReaderTest {
                 }
 
                 Assert.assertEquals(strings, expected);
-                System.out.printf("String: %s\n", str.replaceAll("\n", "\\\\n"));
-                System.out.printf("Actual -> %s - %s <- Expected\n", strings.toString().replaceAll("\n", "\\\\n"), expected.toString().replaceAll("\n", "\\\\n"));
 
             } catch (BrokenCsvStructureException | IOException | NullPointerException e) {
                 if (e instanceof BrokenCsvStructureException) {
@@ -165,15 +166,14 @@ public class CsvReaderTest {
         ArrayList<LinkedList<String>> correctRows = new ArrayList<>();
         listWithExceptions.add("\"first\",\"second\"broken,third");
         listWithExceptions.add("\"correctFirst\",\"correctSec ond,\",\"correct Third\"");
-
         correctRows.add(new LinkedList<>(Arrays.asList("correctFirst", "correctSec ond,", "correct Third")));
-
         StringBuilder builder = new StringBuilder();
         for (String str : listWithExceptions) {
             builder.append(str).append("\n");
         }
 
         InputStream inputStream = new ByteArrayInputStream(builder.toString().getBytes(StandardCharsets.UTF_8));
+
 
         try (CsvReader csvReader = new CsvReader(
                 new BufferedReader(new InputStreamReader(inputStream)),
