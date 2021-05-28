@@ -27,9 +27,6 @@ public class CsvReader implements AutoCloseable {
      */
     private final Character escapeChar;
 
-    private boolean firstRowIsHeader;
-    private boolean skipHeaderSet = false;
-
     // Below will be readLine() global variables;
     /**
      * Row
@@ -74,13 +71,12 @@ public class CsvReader implements AutoCloseable {
         this.delimiter = delimiter;
         this.escapeChar = escapeChar;
         this.fileReader = fileReader;
-        this.firstRowIsHeader = firstRowIsHeader;
+        if (firstRowIsHeader) {
+            setHeader();
+        }
     }
 
     public LinkedList<String> getHeader() throws BrokenCsvStructureException, IOException {
-        if (header == null) {
-            setHeader(readLine());
-        }
         return header;
     }
 
@@ -93,20 +89,19 @@ public class CsvReader implements AutoCloseable {
      */
 
     public LinkedHashMap<String, String> getMappedRow() throws BrokenCsvStructureException, IOException {
+
         LinkedList<String> row = readLine();
-        if (!skipHeaderSet) {
-            if (firstRowIsHeader) {
-                setHeader(row);
-                row = readLine();
-            } else {
-                header = new LinkedList<>();
-                for (int i = 0; i < row.size(); i++) {
-                    header.add(i, String.valueOf(i));
-                }
+
+        if (header == null) {
+            header = new LinkedList<>();
+            for (int i = 0; i < row.size(); i++) {
+                header.add(i, String.valueOf(i));
             }
+            row = readLine();
         }
 
         LinkedHashMap<String, String> mappedRow = new LinkedHashMap<>();
+
         for (int i = 0; i < row.size(); i++) {
             mappedRow.put(header.get(i), row.get(i));
         }
@@ -114,9 +109,12 @@ public class CsvReader implements AutoCloseable {
         return mappedRow;
     }
 
-    private void setHeader(LinkedList<String> row) {
-        header = row;
-        skipHeaderSet = true;
+    private void setHeader() {
+        try {
+            header = readLine();
+        } catch (BrokenCsvStructureException | IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
