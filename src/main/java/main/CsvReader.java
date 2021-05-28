@@ -5,6 +5,7 @@ import exceptions.BrokenCsvStructureException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 
 /**
@@ -26,11 +27,20 @@ public class CsvReader implements AutoCloseable {
      */
     private final Character escapeChar;
 
+    private boolean firstRowIsHeader;
+    private boolean skipHeaderSet = false;
+
     // Below will be readLine() global variables;
     /**
      * Row
      */
     private LinkedList<String> cells;
+
+    /**
+     * Header
+     */
+    private LinkedList<String> header;
+
     /**
      * Cell
      */
@@ -55,14 +65,58 @@ public class CsvReader implements AutoCloseable {
     /**
      * Constructor
      *
-     * @param fileReader BufferedReader Object
-     * @param delimiter  Character or char for delimiting symbol
-     * @param escapeChar Character or char for escape symbol
+     * @param fileReader       BufferedReader Object
+     * @param delimiter        Character or char for delimiting symbol
+     * @param escapeChar       Character or char for escape symbol
+     * @param firstRowIsHeader boolean value that indicates if first row is a header
      */
-    public CsvReader(BufferedReader fileReader, Character delimiter, Character escapeChar) {
+    public CsvReader(BufferedReader fileReader, Character delimiter, Character escapeChar, boolean firstRowIsHeader) {
         this.delimiter = delimiter;
         this.escapeChar = escapeChar;
         this.fileReader = fileReader;
+        this.firstRowIsHeader = firstRowIsHeader;
+    }
+
+    public LinkedList<String> getHeader() throws BrokenCsvStructureException, IOException {
+        if (header == null) {
+            setHeader(readLine());
+        }
+        return header;
+    }
+
+    /**
+     * Returns mapped row with column names
+     *
+     * @return LinkedHashMap
+     * @throws BrokenCsvStructureException custom exception, see exceptions.BrokenCsvStrictureException
+     * @throws IOException                 I\O Exception
+     */
+
+    public LinkedHashMap<String, String> getMappedRow() throws BrokenCsvStructureException, IOException {
+        LinkedList<String> row = readLine();
+        if (!skipHeaderSet) {
+            if (firstRowIsHeader) {
+                setHeader(row);
+                row = readLine();
+            } else {
+                header = new LinkedList<>();
+                for (int i = 0; i < row.size(); i++) {
+                    header.add(i, String.valueOf(i));
+                }
+            }
+        }
+
+        LinkedHashMap<String, String> mappedRow = new LinkedHashMap<>();
+        for (int i = 0; i < row.size(); i++) {
+            mappedRow.put(header.get(i), row.get(i));
+        }
+
+        return mappedRow;
+    }
+
+    private void setHeader(LinkedList<String> row) {
+        header = row;
+        skipHeaderSet = true;
     }
 
     /**

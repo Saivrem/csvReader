@@ -6,10 +6,7 @@ import org.junit.Test;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.*;
 
 public class CsvReaderTest {
 
@@ -45,7 +42,7 @@ public class CsvReaderTest {
             try (CsvReader csvReader = new CsvReader(
                     new BufferedReader(
                             new StringReader(str)
-                    ), ',', '\"')
+                    ), ',', '\"', false)
             ) {
                 LinkedList<String> strings = csvReader.readLine();
                 LinkedList<String> expected = positiveResults.get(str);
@@ -79,7 +76,7 @@ public class CsvReaderTest {
                     CsvReader csvReader = new CsvReader(
                             new BufferedReader(
                                     new StringReader(str)
-                            ), ',', '\"')
+                            ), ',', '\"', false)
             ) {
                 LinkedList<String> strings = csvReader.readLine();
                 Assert.fail("No exception thrown\n" + strings.toString());
@@ -115,7 +112,7 @@ public class CsvReaderTest {
             try (CsvReader csvReader = new CsvReader(
                     new BufferedReader(
                             new StringReader(str)
-                    ), ',', null)
+                    ), ',', null, false)
             ) {
                 LinkedList<String> strings = csvReader.readLine();
                 LinkedList<String> expected = positiveResults.get(str);
@@ -145,7 +142,7 @@ public class CsvReaderTest {
             try (CsvReader csvReader = new CsvReader(
                     new BufferedReader(
                             new StringReader(str)
-                    ), ',', null)
+                    ), ',', null, false)
             ) {
                 csvReader.symmetryCheck = 3;
                 LinkedList<String> strings = csvReader.readLine();
@@ -177,9 +174,7 @@ public class CsvReaderTest {
 
         try (CsvReader csvReader = new CsvReader(
                 new BufferedReader(new InputStreamReader(inputStream)),
-                ',',
-                '\"'
-        )) {
+                ',', '\"', false)) {
             while (csvReader.ready()) {
                 try {
                     LinkedList<String> row = csvReader.readLine();
@@ -201,13 +196,72 @@ public class CsvReaderTest {
     public void testClose() {
         CsvReader csvReader = new CsvReader(
                 new BufferedReader(new StringReader("test,string")),
-                ',',
-                '\"');
+                ',', '\"', false);
         csvReader.close();
         try {
             System.out.println(csvReader.ready());
         } catch (IOException ioException) {
             Assert.assertEquals(ioException.getMessage(), "Stream closed");
         }
+    }
+
+    /**
+     * I know this is shit, will redo it later
+     * TODO rewrite it in a proper way
+     */
+    @Test
+    public void positiveTestMappedRowGetter() {
+        ArrayList<String> assets = new ArrayList<>();
+        assets.add("Header1,Header2,Header3\n");
+        assets.add("Row1Value1,Row1Value2,Row1Value3\n");
+        assets.add("Row2Value1,Row2Value2,Row2Value3\n");
+        StringBuilder testCsv = new StringBuilder();
+        for (String str : assets) {
+            testCsv.append(str);
+        }
+
+        int iter = 1;
+        int index = 0;
+        InputStream inputStream = new ByteArrayInputStream(testCsv.toString().getBytes(StandardCharsets.UTF_8));
+
+        try (CsvReader csvReader = new CsvReader(
+                new BufferedReader(new InputStreamReader(inputStream)),
+                ',', null, true)) {
+            while (csvReader.ready()) {
+                try {
+                    LinkedHashMap<String, String> mappedRow = csvReader.getMappedRow();
+                    LinkedList<String> header = csvReader.getHeader();
+                    String[] row;
+                    for (Map.Entry<String, String> pair : mappedRow.entrySet()) {
+                        String currentValue = pair.getValue();
+                        String currentHeader = pair.getKey();
+
+                        row = assets.get(iter).replaceAll("\n", "").split(",");
+
+                        if (!(currentHeader.equals(header.get(index)))) {
+                            Assert.fail("Wrong Header");
+                        }
+                        if (!(currentValue.equals(row[index]))) {
+                            Assert.fail("Wrong value");
+                        }
+                        System.out.printf("%s - %s\n", pair.getKey(), pair.getValue());
+                        index++;
+                    }
+                } catch (BrokenCsvStructureException | IOException exception) {
+                    if (exception instanceof BrokenCsvStructureException) {
+                        String message = ((BrokenCsvStructureException) exception).getCustomMessage();
+                        Assert.fail(message);
+                    } else {
+                        exception.printStackTrace();
+                        Assert.fail("Exception was thrown");
+                    }
+                }
+                iter++;
+                index = 0;
+            }
+        } catch (IOException exception) {
+            Assert.fail("Wrong exception");
+        }
+
     }
 }
