@@ -26,7 +26,11 @@ import java.util.LinkedList;
 public class Main {
     public static void main(String[] args) throws Exception {
         Path simpleCsvFile = Paths.get("/home/user/file.csv");
-        try (SimpleCsvReader reader = new SimpleCsvReader(new InputStreamReader(new FileInputStream(simpleCsvFile.toFile())), ',')) {
+        try (SimpleCsvReader reader = new SimpleCsvReader(
+                new InputStreamReader(
+                        new FileInputStream(simpleCsvFile.toFile()
+                        )
+                ), ',')) {
             while (reader.ready()) {
                 LinkedList<String> strings = reader.readRow();
                 for (String str : strings) {
