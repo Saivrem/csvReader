@@ -6,6 +6,6 @@ public class LineIsTooLongException extends CsvReadingException {
 
     protected LineIsTooLongException(int row) {
         super(row);
-        customMessage.append("\n").append(String.format("Line is larger than %.2f Mb", LINE_LIMIT_SIZE / 1024 / 1024));
+        customMessage.append(String.format("Line is larger than %.2f Mb\n", LINE_LIMIT_SIZE / 1024 / 1024));
     }
 }

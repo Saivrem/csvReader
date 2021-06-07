@@ -5,11 +5,12 @@ public abstract class CsvReadingException extends Exception {
     protected StringBuilder customMessage = new StringBuilder();
 
     protected CsvReadingException(int row) {
-        customMessage.append(String.format("Exception caught processing row - %d", row));
+        customMessage.append(this.getClass().getSimpleName()).append("\n");
+        customMessage.append(String.format("Exception caught processing row - %d\n", row));
     }
 
     public String getCustomMessage() {
-        return customMessage.length() != 0 ? customMessage.toString() : this.getClass().getSimpleName();
+        return customMessage.toString();
     }
 
     @Override
