@@ -1,6 +1,6 @@
-package main;
+package reader;
 
-import exceptions.BrokenCsvStructureException;
+import exceptions.LegacyBrokenCsvStructureException;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 
-public class CsvReaderTest {
+public class LegacyCsvReaderTest {
 
     @Test
     public void positiveTestReadLineWithEscape() {
@@ -42,21 +42,21 @@ public class CsvReaderTest {
 
         for (String str : inputPositiveCases) {
 
-            try (CsvReader csvReader = new CsvReader(
+            try (LegacyCsvReader legacyCsvReader = new LegacyCsvReader(
                     new BufferedReader(
                             new StringReader(str)
                     ), ',', '\"')
             ) {
-                LinkedList<String> strings = csvReader.readLine();
+                LinkedList<String> strings = legacyCsvReader.readLine();
                 LinkedList<String> expected = positiveResults.get(str);
                 if (strings.size() != 3) {
                     Assert.fail("wrong elements count");
                 }
 
                 Assert.assertEquals(strings, expected);
-            } catch (BrokenCsvStructureException | IOException | NullPointerException e) {
-                if (e instanceof BrokenCsvStructureException) {
-                    String message = ((BrokenCsvStructureException) e).getCustomMessage();
+            } catch (LegacyBrokenCsvStructureException | IOException | NullPointerException e) {
+                if (e instanceof LegacyBrokenCsvStructureException) {
+                    String message = ((LegacyBrokenCsvStructureException) e).getCustomMessage();
                     Assert.fail(message);
                 } else {
                     e.printStackTrace();
@@ -76,18 +76,18 @@ public class CsvReaderTest {
         inputNegativeCases.add("a,\"b,c\n");
         for (String str : inputNegativeCases) {
             try (
-                    CsvReader csvReader = new CsvReader(
+                    LegacyCsvReader legacyCsvReader = new LegacyCsvReader(
                             new BufferedReader(
                                     new StringReader(str)
                             ), ',', '\"')
             ) {
-                LinkedList<String> strings = csvReader.readLine();
+                LinkedList<String> strings = legacyCsvReader.readLine();
                 Assert.fail("No exception thrown\n" + strings.toString());
-            } catch (BrokenCsvStructureException | IOException e) {
-                if (!(e instanceof BrokenCsvStructureException)) {
+            } catch (LegacyBrokenCsvStructureException | IOException e) {
+                if (!(e instanceof LegacyBrokenCsvStructureException)) {
                     Assert.fail("Wrong Exception");
                 } else {
-                    System.out.println(((BrokenCsvStructureException) e).getCustomMessage());
+                    System.out.println(((LegacyBrokenCsvStructureException) e).getCustomMessage());
                 }
             }
         }
@@ -112,12 +112,12 @@ public class CsvReaderTest {
 
         for (String str : inputPositiveCases) {
 
-            try (CsvReader csvReader = new CsvReader(
+            try (LegacyCsvReader legacyCsvReader = new LegacyCsvReader(
                     new BufferedReader(
                             new StringReader(str)
                     ), ',', null)
             ) {
-                LinkedList<String> strings = csvReader.readLine();
+                LinkedList<String> strings = legacyCsvReader.readLine();
                 LinkedList<String> expected = positiveResults.get(str);
                 if (strings.size() != 3) {
                     Assert.fail("wrong elements count");
@@ -125,9 +125,9 @@ public class CsvReaderTest {
 
                 Assert.assertEquals(strings, expected);
 
-            } catch (BrokenCsvStructureException | IOException | NullPointerException e) {
-                if (e instanceof BrokenCsvStructureException) {
-                    String message = ((BrokenCsvStructureException) e).getCustomMessage();
+            } catch (LegacyBrokenCsvStructureException | IOException | NullPointerException e) {
+                if (e instanceof LegacyBrokenCsvStructureException) {
+                    String message = ((LegacyBrokenCsvStructureException) e).getCustomMessage();
                     Assert.fail(message);
                 } else {
                     e.printStackTrace();
@@ -142,19 +142,19 @@ public class CsvReaderTest {
         ArrayList<String> inputNegativeCases = new ArrayList<>();
         inputNegativeCases.add("a,b,b,c");
         for (String str : inputNegativeCases) {
-            try (CsvReader csvReader = new CsvReader(
+            try (LegacyCsvReader legacyCsvReader = new LegacyCsvReader(
                     new BufferedReader(
                             new StringReader(str)
                     ), ',', null)
             ) {
-                csvReader.symmetryCheck = 3;
-                LinkedList<String> strings = csvReader.readLine();
+                legacyCsvReader.symmetryCheck = 3;
+                LinkedList<String> strings = legacyCsvReader.readLine();
                 Assert.fail("No Exception thrown\n" + strings.toString());
-            } catch (BrokenCsvStructureException | IOException e) {
-                if (!(e instanceof BrokenCsvStructureException)) {
+            } catch (LegacyBrokenCsvStructureException | IOException e) {
+                if (!(e instanceof LegacyBrokenCsvStructureException)) {
                     Assert.fail("Wrong exception");
                 } else {
-                    System.out.println(((BrokenCsvStructureException) e).getCustomMessage());
+                    System.out.println(((LegacyBrokenCsvStructureException) e).getCustomMessage());
                 }
             }
         }
@@ -175,18 +175,18 @@ public class CsvReaderTest {
         InputStream inputStream = new ByteArrayInputStream(builder.toString().getBytes(StandardCharsets.UTF_8));
 
 
-        try (CsvReader csvReader = new CsvReader(
+        try (LegacyCsvReader legacyCsvReader = new LegacyCsvReader(
                 new BufferedReader(new InputStreamReader(inputStream)),
                 ',',
                 '\"'
         )) {
-            while (csvReader.ready()) {
+            while (legacyCsvReader.ready()) {
                 try {
-                    LinkedList<String> row = csvReader.readLine();
+                    LinkedList<String> row = legacyCsvReader.readLine();
                     Assert.assertEquals(row, correctRows.get(0));
-                } catch (BrokenCsvStructureException | IOException exception) {
-                    if (exception instanceof BrokenCsvStructureException) {
-                        System.out.println(((BrokenCsvStructureException) exception).getCustomMessage());
+                } catch (LegacyBrokenCsvStructureException | IOException exception) {
+                    if (exception instanceof LegacyBrokenCsvStructureException) {
+                        System.out.println(((LegacyBrokenCsvStructureException) exception).getCustomMessage());
                     } else {
                         Assert.fail("Wrong exception withing While");
                     }
@@ -199,13 +199,13 @@ public class CsvReaderTest {
 
     @Test
     public void testClose() {
-        CsvReader csvReader = new CsvReader(
+        LegacyCsvReader legacyCsvReader = new LegacyCsvReader(
                 new BufferedReader(new StringReader("test,string")),
                 ',',
                 '\"');
-        csvReader.close();
+        legacyCsvReader.close();
         try {
-            System.out.println(csvReader.ready());
+            System.out.println(legacyCsvReader.ready());
         } catch (IOException ioException) {
             Assert.assertEquals(ioException.getMessage(), "Stream closed");
         }

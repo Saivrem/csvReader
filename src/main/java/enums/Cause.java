@@ -6,5 +6,6 @@ package enums;
 public enum Cause {
     ESCAPE,
     COLUMNS,
-    STRUCTURE
+    STRUCTURE,
+    LARGE_LINE
 }

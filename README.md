@@ -1,6 +1,7 @@
 # A simple how-to
+
 ```java
-import exceptions.BrokenCsvStructureException;
+import exceptions.LegacyBrokenCsvStructureException;
 
 import java.io.*;
 import java.util.LinkedList;
@@ -8,7 +9,7 @@ import java.util.LinkedList;
 public class Main {
     public static void main(String[] args) {
         try (CsvReader reader = new CsvReader(
-                       // File to read
+                // File to read
                 new BufferedReader(new FileReader("/home/user/test.csv")),
                 ',',   // Delimiter
                 null   // Escape
@@ -18,7 +19,7 @@ public class Main {
                 //Do some code here
                 System.out.println(row.toString());
             }
-        } catch (IOException | BrokenCsvStructureException exception) {
+        } catch (IOException | LegacyBrokenCsvStructureException exception) {
             exception.printStackTrace();
         }
     }
