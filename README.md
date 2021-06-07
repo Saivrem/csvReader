@@ -1,5 +1,5 @@
-#Read me
-####Version 1.5 (OOP_Rework_WIP);
+# Read me
+#### Version 1.5 (OOP_Rework_WIP);
 
 MVP for future major upgrade;
 
@@ -44,7 +44,7 @@ public class Main {
 }
 ```
 
-####Version 1.2 Legacy classes
+#### Version 1.2 Legacy classes
 
 Old classes appended with "Legacy" prefix
 and marked as "Deprecated".
