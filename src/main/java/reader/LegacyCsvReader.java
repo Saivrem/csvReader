@@ -114,7 +114,7 @@ public class LegacyCsvReader implements AutoCloseable {
                     throwException(line, line.lastIndexOf(escapeChar), Cause.STRUCTURE);
                 }
             } else {
-                throwException(line, line.lastIndexOf(escapeChar), Cause.ESCAPE);
+                throwException(line, line.lastIndexOf(escapeChar), Cause.ENCLOSURE);
             }
         } else if (
                 (currentChar.equals(delimiter)) ||
@@ -157,7 +157,7 @@ public class LegacyCsvReader implements AutoCloseable {
             if (i == 0 || (previousChar.equals(delimiter))) {
                 escapedField = true;
             } else {
-                throwException(line, i, Cause.ESCAPE);
+                throwException(line, i, Cause.ENCLOSURE);
             }
         } else {
             if (nextChar != null) {
@@ -167,7 +167,7 @@ public class LegacyCsvReader implements AutoCloseable {
                 } else if (nextChar.equals(delimiter)) {
                     escapedField = false;
                 } else {
-                    throwException(line, i, Cause.ESCAPE);
+                    throwException(line, i, Cause.ENCLOSURE);
                 }
             } else {
                 cells.add(cell.toString());

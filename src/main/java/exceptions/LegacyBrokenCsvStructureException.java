@@ -28,7 +28,7 @@ public class LegacyBrokenCsvStructureException extends Exception {
      */
     public LegacyBrokenCsvStructureException(String line, Integer charIndex, int symmetryCheck, int rowSize, String row, Cause cause) {
         switch (cause) {
-            case ESCAPE:
+            case ENCLOSURE:
                 this.customMessage = String.format(ESCAPE_CHAR_PATTERN, line, charIndex);
                 break;
             case COLUMNS:

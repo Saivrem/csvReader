@@ -4,7 +4,7 @@ package enums;
  * Error causes
  */
 public enum Cause {
-    ESCAPE,
+    ENCLOSURE,
     COLUMNS,
     STRUCTURE,
     LARGE_LINE

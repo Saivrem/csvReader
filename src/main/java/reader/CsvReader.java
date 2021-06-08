@@ -39,7 +39,7 @@ public abstract class CsvReader implements AutoCloseable {
         if (overflowProtection <= LineIsTooLongException.LINE_LIMIT_SIZE) {
             overflowProtection++;
         } else {
-            throw factory.getException(Cause.LARGE_LINE, rowsProcessed);
+            throw factory.getException(Cause.LARGE_LINE, getLog());
         }
     }
 
@@ -47,6 +47,9 @@ public abstract class CsvReader implements AutoCloseable {
         overflowProtection = 0;
         row = new LinkedList<>();
         cell = new StringBuilder();
+        currentCharacter = null;
+        previousCharacter = null;
+        nextCharacter = null;
     }
 
     protected void validateStructure() throws CsvReadingException {
@@ -54,9 +57,14 @@ public abstract class CsvReader implements AutoCloseable {
         if (symmetryCheck == 0) {
             symmetryCheck = rowSize;
         } else if (symmetryCheck != rowSize) {
-            throw factory.getException(Cause.COLUMNS, rowsProcessed);
+            throw factory.getException(Cause.COLUMNS, getLog());
         }
         rowsProcessed++;
+    }
+
+    protected ExceptionLogDTO getLog() {
+
+        return new ExceptionLogDTO(rowsProcessed, overflowProtection, row);
     }
 
     @Override
