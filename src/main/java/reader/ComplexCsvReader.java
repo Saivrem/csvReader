@@ -28,7 +28,7 @@ public class ComplexCsvReader extends CsvReader {
         }
         currentCharacter = (char) reader.read();
 
-        while (currentCharacter != '\n') {
+        while (true) {
             nextCharacter = (char) reader.read();
             if (currentCharacter == '\r') {
                 charStep();
@@ -48,9 +48,9 @@ public class ComplexCsvReader extends CsvReader {
             overflowValidation();
             charStep();
 
-            if (!ready()) {
-                if (currentCharacter == enclosure) {
-                    processEnclosureSymbol();
+            if (currentCharacter == '\n' || !ready()) {
+                if (currentCharacter == enclosure && enclosedField) {
+                    enclosedField = false;
                 }
                 break;
             }
@@ -64,7 +64,6 @@ public class ComplexCsvReader extends CsvReader {
         }
 
         if (previousCharacter == delimiter || cell.length() > 0) {
-            cell.append(currentCharacter);
             processDelimiter();
         }
 
