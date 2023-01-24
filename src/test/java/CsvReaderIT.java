@@ -6,12 +6,19 @@ public class CsvReaderIT extends BaseIT {
 
     @Test
     public void shouldCorrectlyReadSimpleCsv() {
-        loadAndAssert("happyPath/expected.txt", "happyPath/input.csv");
+        loadAndAssert("happyPath/expected.json", "happyPath/input.csv");
     }
 
     @Test
     public void shouldProcessTextEnclosure() {
-        loadAndAssert("textEnclosure/simpleExpected.txt", "textEnclosure/simpleInput.csv");
-        loadAndAssert("textEnclosure/allEnclosedExpected.txt", "textEnclosure/allEnclosedInput.csv");
+        loadAndAssert("textEnclosure/simpleExpected.json", "textEnclosure/simpleInput.csv");
+        loadAndAssert("textEnclosure/allEnclosedExpected.json", "textEnclosure/allEnclosedInput.csv");
+        loadAndAssert("textEnclosure/lineSeparatedExpected.json", "textEnclosure/lineSeparatedInput.csv");
+    }
+
+    @Test
+    public void shouldProcessEscapeCharacter() {
+        loadAndAssert("escapeCharacter/simpleExpected.json", "escapeCharacter/simpleInput.csv");
+        loadAndAssert("escapeCharacter/enclosedAndEscapedExpected.json", "escapeCharacter/enclosedAndEscapedInput.csv");
     }
 }

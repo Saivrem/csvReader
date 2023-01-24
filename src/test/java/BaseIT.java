@@ -1,16 +1,17 @@
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import exceptions.CsvReadingException;
 import org.junit.jupiter.api.Assertions;
 import reader.CsvReader;
 
-import java.io.BufferedReader;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class BaseIT {
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
     protected static char DELIMITER = ',';
     protected static char ESCAPE = '\\';
     protected static char ENCLOSURE = '"';
@@ -18,7 +19,6 @@ public class BaseIT {
     protected void loadAndAssert(String expectedPath, String actualPath) {
         List<String> expected = loadExpectedResult(expectedPath);
         List<String> actual = loadActualResult(actualPath);
-
         Assertions.assertEquals(expected, actual);
     }
 
@@ -35,15 +35,13 @@ public class BaseIT {
     }
 
     private List<String> loadExpectedResult(String resource) {
-        List<String> expected = new ArrayList<>();
-        try (BufferedReader expectedReader = new BufferedReader(new FileReader(resolvePath(resource)))) {
-            while (expectedReader.ready()) {
-                expected.add(expectedReader.readLine());
-            }
+        try {
+            return objectMapper.readValue(new FileInputStream(resolvePath(resource)), new TypeReference<>() {
+            });
         } catch (IOException e) {
             Assertions.fail(e.getMessage());
         }
-        return expected;
+        return null;
     }
 
     private String resolvePath(String relative) {
