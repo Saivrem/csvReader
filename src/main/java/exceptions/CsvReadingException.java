@@ -1,16 +1,16 @@
 package exceptions;
 
-import reader.ExceptionLogDTO;
+import reader.ExceptionLog;
 
 public abstract class CsvReadingException extends Exception {
 
     protected StringBuilder customMessage = new StringBuilder();
 
-    protected CsvReadingException(ExceptionLogDTO log) {
+    protected CsvReadingException(ExceptionLog log) {
         customMessage.append(this.getClass().getSimpleName()).append("\n");
         customMessage.append(
                 String.format(
-                        "Exception caught processing row - %d;\n\tcharacter - %d\n", log.getRowNumber(), log.getCharacter()
+                        "Exception caught processing row - %d;\n\tcharacter - %d\n", log.rowNumber(), log.character()
                 )
         );
     }

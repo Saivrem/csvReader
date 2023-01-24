@@ -1,9 +1,9 @@
 package exceptions;
 
-import reader.ExceptionLogDTO;
+import reader.ExceptionLog;
 
 public class EnclosureCharacterException extends CsvReadingException {
-    protected EnclosureCharacterException(ExceptionLogDTO log) {
+    protected EnclosureCharacterException(ExceptionLog log) {
         super(log);
     }
 }

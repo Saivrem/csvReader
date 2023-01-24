@@ -1,7 +1,7 @@
 package exceptions;
 
 import enums.Cause;
-import reader.ExceptionLogDTO;
+import reader.ExceptionLog;
 
 public class CsvReadingExceptionFactory {
 
@@ -17,24 +17,12 @@ public class CsvReadingExceptionFactory {
         return instance;
     }
 
-    public CsvReadingException getException(Cause cause, ExceptionLogDTO log) {
-        CsvReadingException exception;
-        switch (cause) {
-            case STRUCTURE:
-                exception = new BrokenStructureException(log);
-                break;
-            case ENCLOSURE:
-                exception = new EnclosureCharacterException(log);
-                break;
-            case COLUMNS:
-                exception = new ColumnNumberException(log);
-                break;
-            case LARGE_LINE:
-                exception = new LineIsTooLongException(log);
-                break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + cause);
-        }
-        return exception;
+    public CsvReadingException getException(Cause cause, ExceptionLog log) {
+        return switch (cause) {
+            case STRUCTURE -> new BrokenStructureException(log);
+            case ENCLOSURE -> new EnclosureCharacterException(log);
+            case COLUMNS -> new ColumnNumberException(log);
+            case LARGE_LINE -> new LineIsTooLongException(log);
+        };
     }
 }

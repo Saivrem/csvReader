@@ -13,26 +13,26 @@ import java.util.List;
 public class CsvReader implements AutoCloseable {
 
     private final CsvReadingExceptionFactory factory = CsvReadingExceptionFactory.getInstance();
-
-    //service fields
     private final InputStream reader;
-    private int rowsProcessed = 1, overflowProtection = 0, symmetryCheck = 0;
-    private final Character DELIMITER, ESCAPE, ENCLOSURE;
-
-    //logic gates
+    private int rowsProcessed = 1;
+    private int overflowProtection = 0;
+    private int symmetryCheck = 0;
+    private final Character DELIMITER;
+    private final Character ESCAPE;
+    private final Character ENCLOSURE;
     private boolean enclosedField = false;
     private boolean escapeActive = false;
     private final boolean sameEncEsc;
-
-    //State fields
-    private Character previousCharacter, currentCharacter, nextCharacter;
+    private Character previousCharacter;
+    private Character currentCharacter;
+    private Character nextCharacter;
     private StringBuilder cell;
     private List<String> row;
 
     /**
      * Constructor
      *
-     * @param reader    InputStreamReader object of text to read
+     * @param reader    InputStream object of text to read
      * @param delimiter delimiting character
      * @param enclosure text enclosure, could be null
      * @param escape    escape char, could be null
@@ -75,17 +75,17 @@ public class CsvReader implements AutoCloseable {
             charStep();
 
             if (currentCharacter == '\n' || !ready()) {
-                if (previousCharacter == ENCLOSURE && currentCharacter == '\n') {
-                    enclosedField = false;
-                }
-                if (currentCharacter == ENCLOSURE && enclosedField) {
-                    enclosedField = false;
-                }
                 if (!ready()
                         && currentCharacter != ESCAPE
                         && currentCharacter != DELIMITER
                         && (currentCharacter != ENCLOSURE || !enclosedField)) {
                     cell.append(currentCharacter);
+                }
+                if (previousCharacter == ENCLOSURE && currentCharacter == '\n') {
+                    enclosedField = false;
+                }
+                if (currentCharacter == ENCLOSURE && enclosedField) {
+                    enclosedField = false;
                 }
                 break;
             }
@@ -191,8 +191,8 @@ public class CsvReader implements AutoCloseable {
         nextCharacter = null;
     }
 
-    private ExceptionLogDTO getLog() {
-        return new ExceptionLogDTO(rowsProcessed, overflowProtection, row);
+    private ExceptionLog getLog() {
+        return new ExceptionLog(rowsProcessed, overflowProtection, row);
     }
 
     public boolean ready() throws IOException {

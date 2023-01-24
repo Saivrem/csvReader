@@ -1,9 +1,9 @@
 package exceptions;
 
-import reader.ExceptionLogDTO;
+import reader.ExceptionLog;
 
 public class BrokenStructureException extends CsvReadingException {
-    protected BrokenStructureException(ExceptionLogDTO log) {
+    protected BrokenStructureException(ExceptionLog log) {
         super(log);
     }
 }

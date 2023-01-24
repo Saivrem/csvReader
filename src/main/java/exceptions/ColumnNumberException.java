@@ -1,11 +1,11 @@
 package exceptions;
 
-import reader.ExceptionLogDTO;
+import reader.ExceptionLog;
 
 public class ColumnNumberException extends CsvReadingException {
-    protected ColumnNumberException(ExceptionLogDTO log) {
+    protected ColumnNumberException(ExceptionLog log) {
         super(log);
-        customMessage.append(log.getRow()).append("\n");
+        customMessage.append(log.row()).append("\n");
     }
 
 }

@@ -11,6 +11,7 @@ public class CsvReaderIT extends BaseIT {
 
     @Test
     public void shouldProcessTextEnclosure() {
-        loadAndAssert("textEnclosure/expected.txt", "textEnclosure/input.csv");
+        loadAndAssert("textEnclosure/simpleExpected.txt", "textEnclosure/simpleInput.csv");
+        loadAndAssert("textEnclosure/allEnclosedExpected.txt", "textEnclosure/allEnclosedInput.csv");
     }
 }
