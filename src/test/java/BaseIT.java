@@ -22,6 +22,12 @@ public class BaseIT {
         Assertions.assertEquals(expected, actual);
     }
 
+    protected void loadAndAssertMultiline(String expectedPath, String actualPath) {
+        List<List<String>> expected = loadListOfExpectedResults(expectedPath);
+        List<List<String>> actual = loadListOfActualResults(actualPath);
+        Assertions.assertEquals(expected, actual);
+    }
+
     private List<String> loadActualResult(String resource) {
         List<String> strings = new ArrayList<>();
         try (CsvReader reader = new CsvReader(new FileInputStream(resolvePath(resource)), DELIMITER, ENCLOSURE, ESCAPE)) {
@@ -34,7 +40,29 @@ public class BaseIT {
         return strings;
     }
 
+    private List<List<String>> loadListOfActualResults(String resource) {
+        List<List<String>> miltiline = new ArrayList<>();
+        try (CsvReader reader = new CsvReader(new FileInputStream(resolvePath(resource)), DELIMITER, ENCLOSURE, ESCAPE)) {
+            while (reader.ready()) {
+                miltiline.add(reader.readRow());
+            }
+        } catch (IOException | CsvReadingException e) {
+            Assertions.fail(e.getMessage());
+        }
+        return miltiline;
+    }
+
     private List<String> loadExpectedResult(String resource) {
+        try {
+            return objectMapper.readValue(new FileInputStream(resolvePath(resource)), new TypeReference<>() {
+            });
+        } catch (IOException e) {
+            Assertions.fail(e.getMessage());
+        }
+        return null;
+    }
+
+    private List<List<String>> loadListOfExpectedResults(String resource) {
         try {
             return objectMapper.readValue(new FileInputStream(resolvePath(resource)), new TypeReference<>() {
             });
