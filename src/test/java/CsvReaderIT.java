@@ -14,6 +14,7 @@ public class CsvReaderIT extends BaseIT {
         loadAndAssert("textEnclosure/simpleExpected.json", "textEnclosure/simpleInput.csv");
         loadAndAssert("textEnclosure/allEnclosedExpected.json", "textEnclosure/allEnclosedInput.csv");
         loadAndAssert("textEnclosure/lineSeparatedExpected.json", "textEnclosure/lineSeparatedInput.csv");
+        loadAndAssert("textEnclosure/emptyStringExpected.json", "textEnclosure/emptyStringInput.csv");
     }
 
     @Test
