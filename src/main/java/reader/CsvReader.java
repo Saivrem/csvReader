@@ -6,17 +6,18 @@ import exceptions.CsvReadingExceptionFactory;
 import exceptions.LineIsTooLongException;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.LinkedList;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CsvReader implements AutoCloseable {
 
     private final CsvReadingExceptionFactory factory = CsvReadingExceptionFactory.getInstance();
 
     //service fields
-    private final InputStreamReader reader;
+    private final InputStream reader;
     private int rowsProcessed = 1, overflowProtection = 0, symmetryCheck = 0;
-    private final Character delimiter, escape, enclosure;
+    private final Character DELIMITER, ESCAPE, ENCLOSURE;
 
     //logic gates
     private boolean enclosedField = false;
@@ -26,7 +27,7 @@ public class CsvReader implements AutoCloseable {
     //State fields
     private Character previousCharacter, currentCharacter, nextCharacter;
     private StringBuilder cell;
-    private LinkedList<String> row;
+    private List<String> row;
 
     /**
      * Constructor
@@ -36,16 +37,15 @@ public class CsvReader implements AutoCloseable {
      * @param enclosure text enclosure, could be null
      * @param escape    escape char, could be null
      */
-    public CsvReader(InputStreamReader reader, Character delimiter, Character enclosure, Character escape) {
-        this.delimiter = delimiter;
+    public CsvReader(InputStream reader, Character delimiter, Character enclosure, Character escape) {
+        this.DELIMITER = delimiter;
         this.reader = reader;
-        this.enclosure = enclosure;
-        this.escape = escape;
+        this.ENCLOSURE = enclosure;
+        this.ESCAPE = escape;
         this.sameEncEsc = enclosure == escape;
     }
 
-
-    public LinkedList<String> readRow() throws CsvReadingException, IOException {
+    public List<String> readRow() throws CsvReadingException, IOException {
         if (!enclosedField) {
             prepareFields();
         }
@@ -61,11 +61,11 @@ public class CsvReader implements AutoCloseable {
                 continue;
             }
 
-            if (currentCharacter == delimiter) {
+            if (currentCharacter == DELIMITER) {
                 processDelimiter();
-            } else if (currentCharacter == enclosure) {
+            } else if (currentCharacter == ENCLOSURE) {
                 processEnclosureSymbol();
-            } else if (currentCharacter == escape) {
+            } else if (currentCharacter == ESCAPE) {
                 processEscapeSymbol();
             } else {
                 cell.append(currentCharacter);
@@ -75,15 +75,20 @@ public class CsvReader implements AutoCloseable {
             charStep();
 
             if (currentCharacter == '\n' || !ready()) {
-                if (previousCharacter == enclosure && currentCharacter == '\n') {
+                if (previousCharacter == ENCLOSURE && currentCharacter == '\n') {
                     enclosedField = false;
                 }
-                if (currentCharacter == enclosure && enclosedField) {
+                if (currentCharacter == ENCLOSURE && enclosedField) {
                     enclosedField = false;
+                }
+                if (!ready()
+                        && currentCharacter != ESCAPE
+                        && currentCharacter != DELIMITER
+                        && (currentCharacter != ENCLOSURE || !enclosedField)) {
+                    cell.append(currentCharacter);
                 }
                 break;
             }
-
         }
 
         if (enclosedField && currentCharacter != '"') {
@@ -92,7 +97,7 @@ public class CsvReader implements AutoCloseable {
             readRow();
         }
 
-        if (previousCharacter == delimiter || cell.length() > 0) {
+        if (previousCharacter == DELIMITER || cell.length() > 0) {
             appendCell();
         }
 
@@ -120,7 +125,7 @@ public class CsvReader implements AutoCloseable {
             }
             if (escapeActive) {
                 processEscapeSymbol();
-            } else if (nextCharacter == delimiter || nextCharacter == '\n') {
+            } else if (nextCharacter == DELIMITER || nextCharacter == '\n') {
                 enclosedField = false;
             } else if (!ready()) {
                 appendCell();
@@ -128,7 +133,7 @@ public class CsvReader implements AutoCloseable {
                 throw factory.getException(Cause.ENCLOSURE, getLog());
             }
         } else {
-            if (previousCharacter == null || previousCharacter == delimiter) {
+            if (previousCharacter == null || previousCharacter == DELIMITER) {
                 enclosedField = true;
             } else {
                 throw factory.getException(Cause.ENCLOSURE, getLog());
@@ -137,9 +142,9 @@ public class CsvReader implements AutoCloseable {
     }
 
     private void processEscapeSymbol() {
-        if (!escapeActive && (nextCharacter == escape || nextCharacter == enclosure)) {
+        if (!escapeActive && (nextCharacter == ESCAPE || nextCharacter == ENCLOSURE)) {
             escapeActive = true;
-        } else if (previousCharacter == escape && escapeActive) {
+        } else if (previousCharacter == ESCAPE && escapeActive) {
             escapeActive = false;
             cell.append(currentCharacter);
         }
@@ -164,7 +169,7 @@ public class CsvReader implements AutoCloseable {
     }
 
     private boolean checkEscape() {
-        return escapeActive = (nextCharacter == escape && currentCharacter == escape);
+        return escapeActive = (nextCharacter == ESCAPE && currentCharacter == ESCAPE);
     }
 
     private void charStep() {
@@ -179,7 +184,7 @@ public class CsvReader implements AutoCloseable {
 
     private void prepareFields() {
         overflowProtection = 0;
-        row = new LinkedList<>();
+        row = new ArrayList<>();
         cell = new StringBuilder();
         currentCharacter = null;
         previousCharacter = null;
@@ -191,7 +196,7 @@ public class CsvReader implements AutoCloseable {
     }
 
     public boolean ready() throws IOException {
-        return reader.ready();
+        return reader.available() > 0;
     }
 
     @Override

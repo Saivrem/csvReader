@@ -1,15 +1,22 @@
 package reader;
 
 import exceptions.LegacyBrokenCsvStructureException;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class LegacyCsvReaderTest {
 
@@ -50,17 +57,17 @@ public class LegacyCsvReaderTest {
                 LinkedList<String> strings = legacyCsvReader.readLine();
                 LinkedList<String> expected = positiveResults.get(str);
                 if (strings.size() != 3) {
-                    Assert.fail("wrong elements count");
+                    fail("wrong elements count");
                 }
 
-                Assert.assertEquals(strings, expected);
+                assertEquals(strings, expected);
             } catch (LegacyBrokenCsvStructureException | IOException | NullPointerException e) {
                 if (e instanceof LegacyBrokenCsvStructureException) {
                     String message = ((LegacyBrokenCsvStructureException) e).getCustomMessage();
-                    Assert.fail(message);
+                    fail(message);
                 } else {
                     e.printStackTrace();
-                    Assert.fail("Exception was thrown");
+                    fail("Exception was thrown");
                 }
             }
         }
@@ -82,10 +89,10 @@ public class LegacyCsvReaderTest {
                             ), ',', '\"')
             ) {
                 LinkedList<String> strings = legacyCsvReader.readLine();
-                Assert.fail("No exception thrown\n" + strings.toString());
+                fail("No exception thrown\n" + strings.toString());
             } catch (LegacyBrokenCsvStructureException | IOException e) {
                 if (!(e instanceof LegacyBrokenCsvStructureException)) {
-                    Assert.fail("Wrong Exception");
+                    fail("Wrong Exception");
                 } else {
                     System.out.println(((LegacyBrokenCsvStructureException) e).getCustomMessage());
                 }
@@ -120,18 +127,18 @@ public class LegacyCsvReaderTest {
                 LinkedList<String> strings = legacyCsvReader.readLine();
                 LinkedList<String> expected = positiveResults.get(str);
                 if (strings.size() != 3) {
-                    Assert.fail("wrong elements count");
+                    fail("wrong elements count");
                 }
 
-                Assert.assertEquals(strings, expected);
+                assertEquals(strings, expected);
 
             } catch (LegacyBrokenCsvStructureException | IOException | NullPointerException e) {
                 if (e instanceof LegacyBrokenCsvStructureException) {
                     String message = ((LegacyBrokenCsvStructureException) e).getCustomMessage();
-                    Assert.fail(message);
+                    fail(message);
                 } else {
                     e.printStackTrace();
-                    Assert.fail("Exception was thrown");
+                    fail("Exception was thrown");
                 }
             }
         }
@@ -149,10 +156,10 @@ public class LegacyCsvReaderTest {
             ) {
                 legacyCsvReader.symmetryCheck = 3;
                 LinkedList<String> strings = legacyCsvReader.readLine();
-                Assert.fail("No Exception thrown\n" + strings.toString());
+                fail("No Exception thrown\n" + strings.toString());
             } catch (LegacyBrokenCsvStructureException | IOException e) {
                 if (!(e instanceof LegacyBrokenCsvStructureException)) {
-                    Assert.fail("Wrong exception");
+                    fail("Wrong exception");
                 } else {
                     System.out.println(((LegacyBrokenCsvStructureException) e).getCustomMessage());
                 }
@@ -174,7 +181,6 @@ public class LegacyCsvReaderTest {
 
         InputStream inputStream = new ByteArrayInputStream(builder.toString().getBytes(StandardCharsets.UTF_8));
 
-
         try (LegacyCsvReader legacyCsvReader = new LegacyCsvReader(
                 new BufferedReader(new InputStreamReader(inputStream)),
                 ',',
@@ -183,17 +189,17 @@ public class LegacyCsvReaderTest {
             while (legacyCsvReader.ready()) {
                 try {
                     LinkedList<String> row = legacyCsvReader.readLine();
-                    Assert.assertEquals(row, correctRows.get(0));
+                    assertEquals(row, correctRows.get(0));
                 } catch (LegacyBrokenCsvStructureException | IOException exception) {
                     if (exception instanceof LegacyBrokenCsvStructureException) {
                         System.out.println(((LegacyBrokenCsvStructureException) exception).getCustomMessage());
                     } else {
-                        Assert.fail("Wrong exception withing While");
+                        fail("Wrong exception withing While");
                     }
                 }
             }
         } catch (IOException exception) {
-            Assert.fail("Wrong exception");
+            fail("Wrong exception");
         }
     }
 
@@ -207,7 +213,7 @@ public class LegacyCsvReaderTest {
         try {
             System.out.println(legacyCsvReader.ready());
         } catch (IOException ioException) {
-            Assert.assertEquals(ioException.getMessage(), "Stream closed");
+            assertEquals(ioException.getMessage(), "Stream closed");
         }
     }
 }
