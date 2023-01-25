@@ -23,6 +23,7 @@ public class CsvReader implements AutoCloseable {
     private boolean enclosedField = false;
     private boolean escapeActive = false;
     private final boolean sameEncEsc;
+    private Character windowsBufferChar;
     private Character previousCharacter;
     private Character currentCharacter;
     private Character nextCharacter;
@@ -50,11 +51,15 @@ public class CsvReader implements AutoCloseable {
             prepareFields();
         }
 
-        currentCharacter = (char) reader.read();
+        currentCharacter = windowsBufferChar == null ? (char) reader.read() : windowsBufferChar;
 
         while (true) {
-
             nextCharacter = (char) reader.read();
+
+            if (previousCharacter != null && previousCharacter == '\r' && currentCharacter == '\n' && !enclosedField) {
+                windowsBufferChar = nextCharacter;
+                break;
+            }
 
             if (currentCharacter == '\r') {
                 charStep();
@@ -125,7 +130,7 @@ public class CsvReader implements AutoCloseable {
             }
             if (escapeActive) {
                 processEscapeSymbol();
-            } else if (nextCharacter == DELIMITER || nextCharacter == '\n') {
+            } else if (nextCharacter == DELIMITER || nextCharacter == '\n' || nextCharacter == '\r') {
                 enclosedField = false;
             } else if (!ready()) {
                 appendCell();

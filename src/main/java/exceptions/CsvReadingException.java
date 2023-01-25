@@ -20,6 +20,11 @@ public abstract class CsvReadingException extends Exception {
     }
 
     @Override
+    public String getMessage() {
+        return this.getCustomMessage();
+    }
+
+    @Override
     public void printStackTrace() {
         super.printStackTrace();
         try {
