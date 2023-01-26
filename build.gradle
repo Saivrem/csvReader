@@ -3,7 +3,7 @@ plugins {
 }
 group = 'in.ua.icetools'
 version = '1.0'
-description = 'csvReaderMaven'
+description = 'csvReaderLib'
 
 dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.1'
