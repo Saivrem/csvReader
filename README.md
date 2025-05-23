@@ -20,10 +20,10 @@ public class Main {
 
     public static void main(String[] args) {
         try (CsvReader reader = new CsvReader(
-                new InputStream("pathToFile"),
+                new InputStream("/path/To/File"),
                 DELIMITER,
                 ENCLOSURE,
-                EXCAPE
+                ESCAPE
         )) {
             List<List<String>> document = new ArrayList<>();
             while (reader.ready()) {
