@@ -1,6 +1,6 @@
 package exceptions;
 
-import enums.Cause;
+import helpers.Cause;
 import reader.ExceptionLog;
 
 public class CsvReadingExceptionFactory {
