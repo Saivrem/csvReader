@@ -18,7 +18,13 @@ public class BaseIT {
 
     protected void loadAndAssert(String expectedPath, String actualPath) {
         List<String> expected = loadExpectedResult(expectedPath);
-        List<String> actual = loadActualResult(actualPath);
+        List<String> actual = loadPlainCsvReaderActualResult(actualPath);
+        Assertions.assertEquals(expected, actual);
+    }
+
+    protected <T> void loadAndAssertWithMappings(String expectedPath, String actualPath, Class<T> typeReference, boolean firstLineHeader) {
+        T expected = loadExpectedResultDto(expectedPath, typeReference);
+        T actual = loadMappedActualResult(actualPath, typeReference, firstLineHeader);
         Assertions.assertEquals(expected, actual);
     }
 
@@ -28,7 +34,7 @@ public class BaseIT {
         Assertions.assertEquals(expected, actual);
     }
 
-    private List<String> loadActualResult(String resource) {
+    private List<String> loadPlainCsvReaderActualResult(String resource) {
         List<String> strings = new ArrayList<>();
         try (CsvReader reader = new CsvReader(new FileInputStream(resolvePath(resource)), DELIMITER, ENCLOSURE, ESCAPE)) {
             while (reader.ready()) {
@@ -38,6 +44,15 @@ public class BaseIT {
             Assertions.fail(e.getMessage());
         }
         return strings;
+    }
+
+    private <T> T loadMappedActualResult(String resource, Class<T> typeReference, boolean firstLineHeader) {
+        try (ObjectCsvReader<T> reader = new ObjectCsvReader<>(new FileInputStream(resolvePath(resource)), DELIMITER, ENCLOSURE, ESCAPE, firstLineHeader, typeReference)) {
+            return reader.readNext();
+        } catch (IOException | CsvReadingException e) {
+            Assertions.fail(e.getMessage());
+        }
+        return null;
     }
 
     private List<List<String>> loadListOfActualResults(String resource) {
@@ -56,6 +71,15 @@ public class BaseIT {
         try {
             return objectMapper.readValue(new FileInputStream(resolvePath(resource)), new TypeReference<>() {
             });
+        } catch (IOException e) {
+            Assertions.fail(e.getMessage());
+        }
+        return null;
+    }
+
+    private <T> T loadExpectedResultDto(String resource, Class<T> typeRef) {
+        try {
+            return objectMapper.readValue(new FileInputStream(resolvePath(resource)), typeRef);
         } catch (IOException e) {
             Assertions.fail(e.getMessage());
         }

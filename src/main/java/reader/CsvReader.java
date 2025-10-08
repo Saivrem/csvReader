@@ -23,7 +23,7 @@ public class CsvReader implements AutoCloseable {
 
     private final boolean SAME_ENC_ESC;
 
-    private int rowsProcessed = 1;
+    protected int rowsProcessed = 1;
     private int overflowProtection = 0;
     private int symmetryCheck = 0;
     private Character windowsBufferChar;
