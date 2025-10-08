@@ -3,6 +3,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import exceptions.CsvReadingException;
 import org.junit.jupiter.api.Assertions;
 import reader.CsvReader;
+import reader.ObjectCsvReader;
 
 import java.io.FileInputStream;
 import java.io.IOException;

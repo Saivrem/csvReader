@@ -1,3 +1,4 @@
+import model.EnumDTO;
 import model.InvalidDTO;
 import model.NameDTO;
 import model.OrdinalDTO;
@@ -36,5 +37,15 @@ class ObjectCsvReaderIT extends BaseIT {
                     false
             );
         });
+    }
+
+    @Test
+    void shouldParseEnumDTO() {
+        loadAndAssertWithMappings(
+                "mapping_parser/enum_dto/expected.json",
+                "mapping_parser/enum_dto/input.csv",
+                EnumDTO.class,
+                true
+        );
     }
 }

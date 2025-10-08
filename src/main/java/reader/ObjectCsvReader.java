@@ -1,7 +1,8 @@
+package reader;
+
 import annotation.CsvMapping;
 import annotation.CsvRow;
 import exceptions.CsvReadingException;
-import reader.CsvReader;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -136,6 +137,20 @@ public class ObjectCsvReader<T> extends CsvReader {
         if (type == Boolean.class || type == boolean.class) return Boolean.parseBoolean(s);
         if (type == Long.class || type == long.class) return Long.parseLong(s);
         if (type == Double.class || type == double.class) return Double.parseDouble(s);
+        if (type.isEnum()) {
+            @SuppressWarnings("unchecked")
+            Class<? extends Enum> enumClass = (Class<? extends Enum>) type;
+            try {
+                return Enum.valueOf(enumClass, s);
+            } catch (IllegalArgumentException ex) {
+                for (Object constant : enumClass.getEnumConstants()) {
+                    if (((Enum<?>) constant).name().equalsIgnoreCase(s)) {
+                        return constant;
+                    }
+                }
+                throw ex;
+            }
+        }
         // fallback
         return s;
     }
