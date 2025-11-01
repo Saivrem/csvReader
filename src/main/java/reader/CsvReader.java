@@ -85,7 +85,7 @@ public class CsvReader implements AutoCloseable {
 
             if (isLF(currentCharacter) || isEOF) {
 
-                // State change in case it is LF
+                // State change in case it is internal LF
                 if (previousCharacter == ENCLOSURE && isLF(currentCharacter)) {
                     enclosedField = false;
                 }
