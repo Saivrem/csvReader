@@ -1,28 +1,31 @@
 package reader;
 
-import enums.Cause;
 import exceptions.CsvReadingException;
 import exceptions.CsvReadingExceptionFactory;
 import exceptions.LineIsTooLongException;
+import helpers.Cause;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import static helpers.Constants.CR;
+import static helpers.Constants.LF;
+
 public class CsvReader implements AutoCloseable {
 
-    private final CsvReadingExceptionFactory factory = CsvReadingExceptionFactory.getInstance();
-    private final InputStream reader;
-    private int rowsProcessed = 1;
-    private int overflowProtection = 0;
-    private int symmetryCheck = 0;
+    private final CsvReadingExceptionFactory EXCEPTION_FACTORY = CsvReadingExceptionFactory.getInstance();
+    private final InputStream READER;
     private final Character DELIMITER;
     private final Character ESCAPE;
     private final Character ENCLOSURE;
-    private boolean enclosedField = false;
-    private boolean escapeActive = false;
-    private final boolean sameEncEsc;
+
+    private final boolean SAME_ENC_ESC;
+
+    protected int rowsProcessed = 1;
+    private int overflowProtection = 0;
+    private int symmetryCheck = 0;
     private Character windowsBufferChar;
     private Character previousCharacter;
     private Character currentCharacter;
@@ -30,20 +33,25 @@ public class CsvReader implements AutoCloseable {
     private StringBuilder cell;
     private List<String> row;
 
+
+    private boolean enclosedField = false;
+    private boolean escapeActive = false;
+    private boolean isEOF = false;
+
     /**
      * Constructor
      *
-     * @param reader    InputStream object of text to read
+     * @param READER    InputStream object of text to read
      * @param delimiter delimiting character
      * @param enclosure text enclosure, could be null
      * @param escape    escape char, could be null
      */
-    public CsvReader(InputStream reader, Character delimiter, Character enclosure, Character escape) {
+    public CsvReader(InputStream READER, Character delimiter, Character enclosure, Character escape) {
         this.DELIMITER = delimiter;
-        this.reader = reader;
+        this.READER = READER;
         this.ENCLOSURE = enclosure;
         this.ESCAPE = escape;
-        this.sameEncEsc = enclosure == escape;
+        this.SAME_ENC_ESC = enclosure == escape;
     }
 
     public List<String> readRow() throws CsvReadingException, IOException {
@@ -51,58 +59,52 @@ public class CsvReader implements AutoCloseable {
             prepareFields();
         }
 
-        currentCharacter = windowsBufferChar == null ? (char) reader.read() : windowsBufferChar;
+        currentCharacter = windowsBufferChar == null ? (char) READER.read() : windowsBufferChar;
 
         while (true) {
-            nextCharacter = (char) reader.read();
+            int read = READER.read();
+            isEOF = read == -1;
 
-            if (previousCharacter != null && previousCharacter == '\r' && currentCharacter == '\n' && !enclosedField) {
+            nextCharacter = (char) read;
+
+            if (notEnclosedCRLF()) {
+                // Saves next char that is already read into buffer so it won't be nullified in next iteration
                 windowsBufferChar = nextCharacter;
                 break;
             }
 
-            if (currentCharacter == '\r') {
+            if (isCR(currentCharacter)) {
+                // CR Symbol is skipped if not in enclosed field
                 charStep();
                 continue;
             }
 
-            if (currentCharacter == DELIMITER) {
-                processDelimiter();
-            } else if (currentCharacter == ENCLOSURE) {
-                processEnclosureSymbol();
-            } else if (currentCharacter == ESCAPE) {
-                processEscapeSymbol();
-            } else {
-                cell.append(currentCharacter);
-            }
-
+            routeCurrentChar();
             overflowValidation();
             charStep();
 
-            if (currentCharacter == '\n' || !ready()) {
-                if (!ready()
-                        && currentCharacter != ESCAPE
-                        && currentCharacter != DELIMITER
-                        && (currentCharacter != ENCLOSURE || !enclosedField)) {
-                    cell.append(currentCharacter);
-                }
-                if (previousCharacter == ENCLOSURE && currentCharacter == '\n') {
+            if (isLF(currentCharacter) || isEOF) {
+
+                // State change in case it is internal LF
+                if (previousCharacter == ENCLOSURE && isLF(currentCharacter)) {
                     enclosedField = false;
                 }
                 if (currentCharacter == ENCLOSURE && enclosedField) {
                     enclosedField = false;
                 }
+
+                // Pure EOF or LF
                 break;
             }
         }
 
-        if (enclosedField && currentCharacter != '"') {
+        if (!isEOF && enclosedField && currentCharacter != ENCLOSURE) {
             cell.append(currentCharacter);
             charStep();
             readRow();
         }
 
-        if (previousCharacter == DELIMITER || cell.length() > 0) {
+        if (previousCharacter == DELIMITER || !cell.isEmpty()) {
             appendCell();
         }
 
@@ -115,6 +117,30 @@ public class CsvReader implements AutoCloseable {
         return row;
     }
 
+    private boolean notEnclosedCRLF() {
+        return isCR(previousCharacter) && isLF(currentCharacter) && !enclosedField;
+    }
+
+    private boolean isCR(Character character) {
+        return CR == character;
+    }
+
+    private boolean isLF(Character character) {
+        return LF == character;
+    }
+
+    private void routeCurrentChar() throws CsvReadingException, IOException {
+        if (currentCharacter == DELIMITER) {
+            processDelimiter();
+        } else if (currentCharacter == ENCLOSURE) {
+            processEnclosureSymbol();
+        } else if (currentCharacter == ESCAPE) {
+            processEscapeSymbol();
+        } else {
+            cell.append(currentCharacter);
+        }
+    }
+
     private void processDelimiter() {
         if (!enclosedField) {
             appendCell();
@@ -125,23 +151,23 @@ public class CsvReader implements AutoCloseable {
 
     private void processEnclosureSymbol() throws CsvReadingException, IOException {
         if (enclosedField) {
-            if (sameEncEsc && !escapeActive && checkEscape()) {
+            if (SAME_ENC_ESC && !escapeActive && checkEscape()) {
                 return;
             }
             if (escapeActive) {
                 processEscapeSymbol();
-            } else if (nextCharacter == DELIMITER || nextCharacter == '\n' || nextCharacter == '\r') {
+            } else if (nextCharacter == DELIMITER || nextCharacter == LF || nextCharacter == CR) {
                 enclosedField = false;
-            } else if (!ready()) {
+            } else if (!hasNext()) {
                 appendCell();
             } else {
-                throw factory.getException(Cause.ENCLOSURE, getLog());
+                throw EXCEPTION_FACTORY.getException(Cause.ENCLOSURE, getLog());
             }
         } else {
             if (previousCharacter == null || previousCharacter == DELIMITER) {
                 enclosedField = true;
             } else {
-                throw factory.getException(Cause.ENCLOSURE, getLog());
+                throw EXCEPTION_FACTORY.getException(Cause.ENCLOSURE, getLog());
             }
         }
     }
@@ -159,7 +185,7 @@ public class CsvReader implements AutoCloseable {
         if (overflowProtection <= LineIsTooLongException.LINE_LIMIT_SIZE) {
             overflowProtection++;
         } else {
-            throw factory.getException(Cause.LARGE_LINE, getLog());
+            throw EXCEPTION_FACTORY.getException(Cause.LARGE_LINE, getLog());
         }
     }
 
@@ -168,7 +194,7 @@ public class CsvReader implements AutoCloseable {
         if (symmetryCheck == 0) {
             symmetryCheck = rowSize;
         } else if (symmetryCheck != rowSize) {
-            throw factory.getException(Cause.COLUMNS, getLog());
+            throw EXCEPTION_FACTORY.getException(Cause.COLUMNS, getLog());
         }
         rowsProcessed++;
     }
@@ -200,12 +226,12 @@ public class CsvReader implements AutoCloseable {
         return new ExceptionLog(rowsProcessed, overflowProtection, row);
     }
 
-    public boolean ready() throws IOException {
-        return reader.available() > 0;
+    public boolean hasNext() throws IOException {
+        return !isEOF;
     }
 
     @Override
     public void close() throws IOException {
-        reader.close();
+        READER.close();
     }
 }
