@@ -33,8 +33,10 @@ public class CsvReader implements AutoCloseable {
     private StringBuilder cell;
     private List<String> row;
 
+
     private boolean enclosedField = false;
     private boolean escapeActive = false;
+    private boolean isEOF = false;
 
     /**
      * Constructor
@@ -60,7 +62,10 @@ public class CsvReader implements AutoCloseable {
         currentCharacter = windowsBufferChar == null ? (char) READER.read() : windowsBufferChar;
 
         while (true) {
-            nextCharacter = (char) READER.read();
+            int read = READER.read();
+            isEOF = read == -1;
+
+            nextCharacter = (char) read;
 
             if (notEnclosedCRLF()) {
                 // Saves next char that is already read into buffer so it won't be nullified in next iteration
@@ -78,12 +83,7 @@ public class CsvReader implements AutoCloseable {
             overflowValidation();
             charStep();
 
-            boolean isEOF = !ready();
             if (isLF(currentCharacter) || isEOF) {
-                // EOF with no special states
-                if (isEOF && isRegularCharacter(currentCharacter)) {
-                    cell.append(currentCharacter);
-                }
 
                 // State change in case it is LF
                 if (previousCharacter == ENCLOSURE && isLF(currentCharacter)) {
@@ -93,12 +93,12 @@ public class CsvReader implements AutoCloseable {
                     enclosedField = false;
                 }
 
-                // Pure EOF case I suppose
+                // Pure EOF or LF
                 break;
             }
         }
 
-        if (enclosedField && currentCharacter != ENCLOSURE) {
+        if (!isEOF && enclosedField && currentCharacter != ENCLOSURE) {
             cell.append(currentCharacter);
             charStep();
             readRow();
@@ -115,10 +115,6 @@ public class CsvReader implements AutoCloseable {
         }
 
         return row;
-    }
-
-    private boolean isRegularCharacter(Character character) {
-        return character != ESCAPE && character != DELIMITER && (character != ENCLOSURE || !enclosedField);
     }
 
     private boolean notEnclosedCRLF() {
@@ -162,7 +158,7 @@ public class CsvReader implements AutoCloseable {
                 processEscapeSymbol();
             } else if (nextCharacter == DELIMITER || nextCharacter == LF || nextCharacter == CR) {
                 enclosedField = false;
-            } else if (!ready()) {
+            } else if (!hasNext()) {
                 appendCell();
             } else {
                 throw EXCEPTION_FACTORY.getException(Cause.ENCLOSURE, getLog());
@@ -230,8 +226,8 @@ public class CsvReader implements AutoCloseable {
         return new ExceptionLog(rowsProcessed, overflowProtection, row);
     }
 
-    public boolean ready() throws IOException {
-        return READER.available() > 0;
+    public boolean hasNext() throws IOException {
+        return !isEOF;
     }
 
     @Override

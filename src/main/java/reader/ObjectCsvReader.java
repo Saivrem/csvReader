@@ -61,10 +61,6 @@ public class ObjectCsvReader<T> extends CsvReader {
         return fields;
     }
 
-    public boolean hasNext() throws IOException {
-        return ready();
-    }
-
     private static <T> T mapEntities(Map<String, String> map, Class<T> tClass) {
         try {
             T obj = tClass.getDeclaredConstructor().newInstance();

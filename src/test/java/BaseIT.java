@@ -38,7 +38,7 @@ public class BaseIT {
     private List<String> loadPlainCsvReaderActualResult(String resource) {
         List<String> strings = new ArrayList<>();
         try (CsvReader reader = new CsvReader(new FileInputStream(resolvePath(resource)), DELIMITER, ENCLOSURE, ESCAPE)) {
-            while (reader.ready()) {
+            while (reader.hasNext()) {
                 strings = reader.readRow();
             }
         } catch (IOException | CsvReadingException e) {
@@ -59,7 +59,7 @@ public class BaseIT {
     private List<List<String>> loadListOfActualResults(String resource) {
         List<List<String>> miltiline = new ArrayList<>();
         try (CsvReader reader = new CsvReader(new FileInputStream(resolvePath(resource)), DELIMITER, ENCLOSURE, ESCAPE)) {
-            while (reader.ready()) {
+            while (reader.hasNext()) {
                 miltiline.add(reader.readRow());
             }
         } catch (IOException | CsvReadingException e) {
