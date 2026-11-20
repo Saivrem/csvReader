@@ -6,6 +6,5 @@ package helpers;
 public enum Cause {
     ENCLOSURE,
     COLUMNS,
-    STRUCTURE,
     LARGE_LINE
 }
