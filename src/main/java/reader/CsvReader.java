@@ -154,7 +154,7 @@ public class CsvReader implements AutoCloseable {
         }
     }
 
-    private void processEnclosureSymbol() throws CsvReadingException, IOException {
+    private void processEnclosureSymbol() throws CsvReadingException {
         if (enclosedField) {
             if (SAME_ENC_ESC && !escapeActive && checkEscape()) {
                 return;
