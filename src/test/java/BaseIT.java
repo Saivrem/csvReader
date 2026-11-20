@@ -48,6 +48,7 @@ public class BaseIT {
         List<List<String>> expected = loadListOfExpectedResults(expectedPath);
         List<List<String>> actual = new ArrayList<>();
         List<String> exhaustedRow = List.of();
+        if (expected == null) Assertions.fail("No expected results provided");
         try (CsvReader reader = new CsvReader(new FileInputStream(resolvePath(actualPath)), DELIMITER, ENCLOSURE, ESCAPE)) {
             for (int i = 0; i < expected.size(); i++) {
                 actual.add(reader.readRow());
