@@ -2,7 +2,7 @@ plugins {
     id 'java'
 }
 group = 'in.ua.icetools'
-version = '1.9.1'
+version = '1.9.2'
 description = 'csvReaderLib'
 
 dependencies {
@@ -18,4 +18,10 @@ repositories {
 
 test {
     useJUnitPlatform()
+}
+
+jar {
+    from('LICENSE') {
+        into 'META-INF'
+    }
 }

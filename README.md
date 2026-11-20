@@ -1,6 +1,6 @@
 # csvReader
 
-Version **1.9.1**. Read CSV rows as `List<String>` or optionally map them to Java objects.
+Version **1.9.2**. Read CSV rows as `List<String>` or optionally map them to Java objects.
 
 ## Read rows
 
@@ -88,3 +88,7 @@ JDK 17:
 ```
 
 JAR: `build/libs/`.
+
+## License
+
+Licensed under the [Apache License 2.0](LICENSE).
