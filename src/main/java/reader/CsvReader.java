@@ -134,7 +134,7 @@ public class CsvReader implements AutoCloseable {
         return LF == character;
     }
 
-    private void routeCurrentChar() throws CsvReadingException, IOException {
+    private void routeCurrentChar() throws CsvReadingException {
         if (currentCharacter == DELIMITER) {
             processDelimiter();
         } else if (currentCharacter == ENCLOSURE) {
