@@ -1,161 +1,90 @@
 # csvReader
 
-Version **1.9.1**.
+Version **1.9.1**. Read CSV rows as `List<String>` or optionally map them to Java objects.
 
-A streaming CSV reader with configurable delimiter, enclosure and escape characters.
-Read each row as a `List<String>`, or optionally map rows to annotated Java objects.
-Both readers implement `AutoCloseable` and close their input stream.
+## Read rows
 
-## Build and test
+```java
+try (CsvReader reader = new CsvReader(
+        Files.newInputStream(Path.of("input.csv")), ',', '"', '\\')) {
+    while (reader.hasNext()) {
+        List<String> row = reader.readRow();
+        System.out.println(row);
+    }
+}
+```
 
-Use JDK 17 and the checked-in Gradle wrapper:
+- `CsvReader(InputStream, delimiter, enclosure, escape)` accepts configurable characters;
+  `enclosure` and `escape` may be `null`. Enclosed fields may span lines.
+- `hasNext()` returns `false` at EOF. Repeated calls preserve the next row;
+  reading from the stream may block or throw `IOException`.
+- `readRow()` returns the next row, or an empty list after EOF, and may throw
+  `IOException` or `CsvReadingException`.
+- `close()` closes the input stream.
+
+## Optional object mapping
+
+Annotate the class with `@CsvRow` and each declared field with `@CsvMapping`.
+Use a public class with an accessible no-argument constructor.
+
+```csv
+id,name,status,tags
+1,Alice,ACTIVE,reader;editor
+```
+
+```java
+@CsvRow
+public class Person {
+    public enum Status { ACTIVE, INACTIVE }
+
+    @CsvMapping(name = "id")
+    public int id;
+
+    @CsvMapping(name = "name")
+    public String name;
+
+    @CsvMapping(name = "status")
+    public Status status;
+
+    @CsvMapping(name = "tags", collection = true, separator = ";")
+    public List<String> tags;
+}
+```
+
+```java
+try (ObjectCsvReader<Person> reader = new ObjectCsvReader<>(
+        Files.newInputStream(Path.of("people.csv")),
+        ',', '"', '\\', true, Person.class)) {
+    while (reader.hasNext()) {
+        Person person = reader.readNext();
+        System.out.println(person.name);
+    }
+}
+```
+
+- `ObjectCsvReader` adds `firstRowHeader` and the DTO class to the row-reader constructor.
+  `readNext()` maps one row to a new object; call it while `hasNext()` is `true`.
+- With `firstRowHeader = true`, the constructor reads the header and `name` matches
+  a column exactly. Data rows must have the same number of columns as the header.
+- Without a header, pass `false` and use zero-based positions, e.g.
+  `@CsvMapping(ordinal = 0)`. Set either `name` or `ordinal` on each field.
+- Supported values: `String`, `int`, `long`, `double`, `boolean`, their wrappers,
+  and enums (case-insensitive). Values are trimmed before conversion;
+  booleans follow `Boolean.parseBoolean`.
+- `collection = true` maps `List<T>` or `Set<T>` with a supported element class.
+  `separator` defaults to `;` and follows `String.split` regex rules.
+- Mapping and conversion errors are runtime exceptions.
+
+Imports: `reader.CsvReader`, `reader.ObjectCsvReader`, `annotation.CsvRow`,
+`annotation.CsvMapping`, `exceptions.CsvReadingException`, plus the standard
+`java.io`, `java.nio.file` and `java.util` types used above.
+
+## Build
+
+JDK 17:
 
 ```sh
 ./gradlew clean test build
 ```
 
-The library JAR is written to `build/libs/`. The wrapper uses Gradle 7.6.
-
-## Read rows
-
-```java
-import exceptions.CsvReadingException;
-import reader.CsvReader;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-
-public class ReadRows {
-    public static void main(String[] args) throws IOException, CsvReadingException {
-        try (CsvReader reader = new CsvReader(
-                Files.newInputStream(Path.of("input.csv")), ',', '"', '\\')) {
-            while (reader.hasNext()) {
-                List<String> row = reader.readRow();
-                System.out.println(row);
-            }
-        }
-    }
-}
-```
-
-Constructor arguments are the input stream, delimiter, enclosure and escape,
-in that order. Enclosure and escape are configurable characters, not necessarily
-quotation marks, and either can be `null` to disable it. For example, use
-`new CsvReader(stream, ';', '|', '!')` for semicolon-separated fields enclosed by
-`|` and escaped with `!`. Enclosed fields can span physical lines.
-
-`hasNext()` checks the input stream and buffers the next byte when necessary.
-Repeated checks do not skip data. It may block or throw `IOException`; it does not
-use `InputStream.available()` to determine EOF. Empty input returns `false`.
-After the final row, a trailing LF or CRLF does not create an extra EOF row.
-Calling `readRow()` after EOF returns an empty list.
-
-Process rows incrementally when reading large files rather than retaining the
-whole document in memory.
-
-## Optional object mapping
-
-`ObjectCsvReader<T>` uses the same row parser and maps each row into a new object.
-Annotate the DTO class with `@CsvRow` and each declared field with `@CsvMapping`.
-The DTO needs an accessible no-argument constructor. Use a public top-level class
-or a public static nested class, as in this example.
-
-For a file with a header:
-
-```csv
-id,name,status,tags
-1,Alice,ACTIVE,reader;editor
-2,Bob,inactive,reader
-```
-
-```java
-import annotation.CsvMapping;
-import annotation.CsvRow;
-import exceptions.CsvReadingException;
-import reader.ObjectCsvReader;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-
-public class ReadObjects {
-    public enum Status { ACTIVE, INACTIVE }
-
-    @CsvRow
-    public static class Person {
-        @CsvMapping(name = "id")
-        private int id;
-
-        @CsvMapping(name = "name")
-        private String name;
-
-        @CsvMapping(name = "status")
-        private Status status;
-
-        @CsvMapping(name = "tags", collection = true, separator = ";")
-        private List<String> tags;
-    }
-
-    public static void main(String[] args) throws IOException, CsvReadingException {
-        try (ObjectCsvReader<Person> reader = new ObjectCsvReader<>(
-                Files.newInputStream(Path.of("people.csv")),
-                ',', '"', '\\', true, Person.class)) {
-            while (reader.hasNext()) {
-                Person person = reader.readNext();
-                System.out.println(person.name + ": " + person.tags);
-            }
-        }
-    }
-}
-```
-
-The final constructor arguments select whether the first row is a header and
-specify the DTO class. With `true`, the constructor reads the header and fields
-are matched by `name`. Header names are matched exactly. Each data row must have
-the same number of columns as the header.
-
-For a file **without a header**, pass `false` and map by zero-based position:
-
-```java
-@CsvRow
-public static class Person {
-    @CsvMapping(ordinal = 0)
-    private int id;
-
-    @CsvMapping(ordinal = 1)
-    private String name;
-}
-```
-
-Choose `name` or `ordinal` for each field; do not set both. The current header mode
-uses names, while the mode without a header uses ordinals.
-
-### Supported conversions
-
-- `String`, `int`/`Integer`, `long`/`Long`, `double`/`Double`, `boolean`/`Boolean`.
-- Enum constants, with case-insensitive matching as a fallback.
-- `List<T>` and `Set<T>` with a concrete supported element class, using
-  `collection = true`. Lists are created as `ArrayList`, sets as `HashSet`.
-
-Values are trimmed before conversion, including strings and collection elements.
-Boolean conversion follows `Boolean.parseBoolean`: only `true`, ignoring case,
-produces `true`. Numeric and enum values must be valid for their target types.
-
-Collection `separator` defaults to `;` and is a Java regular expression passed to
-`String.split`. Regex metacharacters need escaping; trailing empty elements are
-discarded. Mapping configuration and conversion failures are reported as runtime
-exceptions; stream failures are reported as `IOException`.
-
-## Current limitations
-
-The reader currently casts individual input bytes to characters; it does not
-accept a charset or decode multibyte encodings. Non-ASCII text, including UTF-8
-and UTF-16 input, is not reliably supported.
-
-The parser exposes `CsvReadingException` subclasses for parsing errors, including
-invalid enclosure placement and the configured line-length limit. Its current
-validation does not constitute strict CSV-specification validation. Object mapping
-is optional and does not replace the underlying row parser.
+JAR: `build/libs/`.

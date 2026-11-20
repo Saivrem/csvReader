@@ -111,6 +111,20 @@ class CsvReaderEofTest {
         }
     }
 
+    @Test
+    void shouldReuseBufferedCharacterAcrossMixedLineEndings() throws Exception {
+        try (CsvReader reader = reader("a,b\r\nc,d\ne,f\r\ng,h")) {
+            for (List<String> expected : List.of(
+                    List.of("a", "b"), List.of("c", "d"),
+                    List.of("e", "f"), List.of("g", "h"))) {
+                assertTrue(reader.hasNext());
+                assertTrue(reader.hasNext());
+                assertEquals(expected, reader.readRow());
+            }
+            assertFalse(reader.hasNext());
+        }
+    }
+
     private CsvReader reader(String input) {
         return new CsvReader(new ByteArrayInputStream(input.getBytes(StandardCharsets.US_ASCII)), ',', '"', '\\');
     }

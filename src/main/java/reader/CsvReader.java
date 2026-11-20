@@ -26,8 +26,7 @@ public class CsvReader implements AutoCloseable {
     protected int rowsProcessed = 1;
     private int overflowProtection = 0;
     private int symmetryCheck = 0;
-    private Character windowsBufferChar;
-    private Integer bufferedByte;
+    private Character bufferedCharacter;
     private Character previousCharacter;
     private Character currentCharacter;
     private Character nextCharacter;
@@ -64,13 +63,8 @@ public class CsvReader implements AutoCloseable {
             prepareFields();
         }
 
-        if (windowsBufferChar != null) {
-            currentCharacter = windowsBufferChar;
-            windowsBufferChar = null;
-        } else {
-            currentCharacter = (char) bufferedByte.intValue();
-            bufferedByte = null;
-        }
+        currentCharacter = bufferedCharacter;
+        bufferedCharacter = null;
 
         while (true) {
             int read = READER.read();
@@ -80,7 +74,7 @@ public class CsvReader implements AutoCloseable {
 
             if (notEnclosedCRLF()) {
                 // Saves next char that is already read into buffer so it won't be nullified in next iteration
-                windowsBufferChar = nextCharacter;
+                bufferedCharacter = nextCharacter;
                 break;
             }
 
@@ -245,7 +239,7 @@ public class CsvReader implements AutoCloseable {
         if (isEOF) {
             return false;
         }
-        if (windowsBufferChar != null || bufferedByte != null) {
+        if (bufferedCharacter != null) {
             return true;
         }
 
@@ -254,7 +248,7 @@ public class CsvReader implements AutoCloseable {
             isEOF = true;
             return false;
         }
-        bufferedByte = read;
+        bufferedCharacter = (char) read;
         return true;
     }
 
