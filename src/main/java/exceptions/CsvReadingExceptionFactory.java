@@ -19,7 +19,6 @@ public class CsvReadingExceptionFactory {
 
     public CsvReadingException getException(Cause cause, ExceptionLog log) {
         return switch (cause) {
-            case STRUCTURE -> new BrokenStructureException(log);
             case ENCLOSURE -> new EnclosureCharacterException(log);
             case COLUMNS -> new ColumnNumberException(log);
             case LARGE_LINE -> new LineIsTooLongException(log);
