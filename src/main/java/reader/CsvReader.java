@@ -232,8 +232,13 @@ public class CsvReader implements AutoCloseable {
     }
 
     /**
-     * Checks for another input byte without consuming it from the parser.
-     * Repeated calls preserve the next row. This may block while reading the stream.
+     * Checks whether more input remains to be parsed.
+     *
+     * <p>Repeated calls do not skip data. This method may block while reading
+     * from the input stream.
+     *
+     * @return {@code true} if input remains, or {@code false} at end of stream
+     * @throws IOException if reading from the input stream fails
      */
     public boolean hasNext() throws IOException {
         if (isEOF) {
