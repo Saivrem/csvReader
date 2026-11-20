@@ -27,6 +27,7 @@ public class CsvReader implements AutoCloseable {
     private int overflowProtection = 0;
     private int symmetryCheck = 0;
     private Character windowsBufferChar;
+    private Integer bufferedByte;
     private Character previousCharacter;
     private Character currentCharacter;
     private Character nextCharacter;
@@ -55,11 +56,21 @@ public class CsvReader implements AutoCloseable {
     }
 
     public List<String> readRow() throws CsvReadingException, IOException {
+        if (!hasNext()) {
+            return List.of();
+        }
+
         if (!enclosedField) {
             prepareFields();
         }
 
-        currentCharacter = windowsBufferChar == null ? (char) READER.read() : windowsBufferChar;
+        if (windowsBufferChar != null) {
+            currentCharacter = windowsBufferChar;
+            windowsBufferChar = null;
+        } else {
+            currentCharacter = (char) bufferedByte.intValue();
+            bufferedByte = null;
+        }
 
         while (true) {
             int read = READER.read();
@@ -158,7 +169,7 @@ public class CsvReader implements AutoCloseable {
                 processEscapeSymbol();
             } else if (nextCharacter == DELIMITER || nextCharacter == LF || nextCharacter == CR) {
                 enclosedField = false;
-            } else if (!hasNext()) {
+            } else if (isEOF) {
                 appendCell();
             } else {
                 throw EXCEPTION_FACTORY.getException(Cause.ENCLOSURE, getLog());
@@ -226,8 +237,25 @@ public class CsvReader implements AutoCloseable {
         return new ExceptionLog(rowsProcessed, overflowProtection, row);
     }
 
+    /**
+     * Checks for another input byte without consuming it from the parser.
+     * Repeated calls preserve the next row. This may block while reading the stream.
+     */
     public boolean hasNext() throws IOException {
-        return !isEOF;
+        if (isEOF) {
+            return false;
+        }
+        if (windowsBufferChar != null || bufferedByte != null) {
+            return true;
+        }
+
+        int read = READER.read();
+        if (read == -1) {
+            isEOF = true;
+            return false;
+        }
+        bufferedByte = read;
+        return true;
     }
 
     @Override
