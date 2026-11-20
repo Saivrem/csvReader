@@ -30,9 +30,70 @@ public class BaseIT {
     }
 
     protected void loadAndAssertMultiline(String expectedPath, String actualPath) {
+        loadAndAssertMultiline(expectedPath, actualPath, DELIMITER, ENCLOSURE, ESCAPE);
+    }
+
+    protected void loadAndAssertMultiline(String expectedPath, String actualPath,
+                                         Character delimiter, Character enclosure, Character escape) {
         List<List<String>> expected = loadListOfExpectedResults(expectedPath);
-        List<List<String>> actual = loadListOfActualResults(actualPath);
-        Assertions.assertEquals(expected, actual);
+        try (CsvReader reader = new CsvReader(new FileInputStream(resolvePath(actualPath)), delimiter, enclosure, escape)) {
+            List<List<String>> actual = readAllRows(reader);
+            Assertions.assertEquals(expected, actual);
+        } catch (IOException | CsvReadingException e) {
+            Assertions.fail(e.getMessage());
+        }
+    }
+
+    protected void loadAndAssertDirectReads(String expectedPath, String actualPath) {
+        List<List<String>> expected = loadListOfExpectedResults(expectedPath);
+        List<List<String>> actual = new ArrayList<>();
+        List<String> exhaustedRow = List.of();
+        try (CsvReader reader = new CsvReader(new FileInputStream(resolvePath(actualPath)), DELIMITER, ENCLOSURE, ESCAPE)) {
+            for (int i = 0; i < expected.size(); i++) {
+                actual.add(reader.readRow());
+            }
+            Assertions.assertEquals(expected, actual);
+            Assertions.assertEquals(exhaustedRow, reader.readRow());
+            Assertions.assertFalse(reader.hasNext());
+            Assertions.assertEquals(exhaustedRow, reader.readRow());
+            Assertions.assertFalse(reader.hasNext());
+        } catch (IOException | CsvReadingException e) {
+            Assertions.fail(e.getMessage());
+        }
+    }
+
+    protected void loadAndAssertWithZeroAvailable(String expectedPath, String actualPath) {
+        List<List<String>> expected = loadListOfExpectedResults(expectedPath);
+        try (CsvReader reader = new CsvReader(new FileInputStream(resolvePath(actualPath)) {
+            @Override
+            public int available() {
+                return 0;
+            }
+        }, DELIMITER, null, null)) {
+            List<List<String>> actual = readAllRows(reader);
+            Assertions.assertEquals(expected, actual);
+        } catch (IOException | CsvReadingException e) {
+            Assertions.fail(e.getMessage());
+        }
+    }
+
+    protected <T> void loadAndAssertMultipleMappings(String expectedPath, String actualPath,
+                                                    Class<T> typeReference, boolean firstLineHeader) {
+        List<T> actual = new ArrayList<>();
+        try (FileInputStream expectedStream = new FileInputStream(resolvePath(expectedPath));
+             ObjectCsvReader<T> reader = new ObjectCsvReader<>(new FileInputStream(resolvePath(actualPath)),
+                     DELIMITER, ENCLOSURE, ESCAPE, firstLineHeader, typeReference)) {
+            List<T> expected = objectMapper.readValue(expectedStream,
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, typeReference));
+            while (reader.hasNext()) {
+                Assertions.assertTrue(reader.hasNext());
+                actual.add(reader.readNext());
+            }
+            Assertions.assertFalse(reader.hasNext());
+            Assertions.assertEquals(expected, actual);
+        } catch (IOException | CsvReadingException e) {
+            Assertions.fail(e.getMessage());
+        }
     }
 
     private List<String> loadPlainCsvReaderActualResult(String resource) {
@@ -56,16 +117,14 @@ public class BaseIT {
         return null;
     }
 
-    private List<List<String>> loadListOfActualResults(String resource) {
-        List<List<String>> miltiline = new ArrayList<>();
-        try (CsvReader reader = new CsvReader(new FileInputStream(resolvePath(resource)), DELIMITER, ENCLOSURE, ESCAPE)) {
-            while (reader.hasNext()) {
-                miltiline.add(reader.readRow());
-            }
-        } catch (IOException | CsvReadingException e) {
-            Assertions.fail(e.getMessage());
+    private List<List<String>> readAllRows(CsvReader reader) throws IOException, CsvReadingException {
+        List<List<String>> rows = new ArrayList<>();
+        while (reader.hasNext()) {
+            Assertions.assertTrue(reader.hasNext());
+            rows.add(reader.readRow());
         }
-        return miltiline;
+        Assertions.assertFalse(reader.hasNext());
+        return rows;
     }
 
     private List<String> loadExpectedResult(String resource) {

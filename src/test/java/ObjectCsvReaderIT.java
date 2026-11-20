@@ -48,4 +48,24 @@ class ObjectCsvReaderIT extends BaseIT {
                 true
         );
     }
+
+    @Test
+    void shouldReadMappedRowsUntilEof() {
+        loadAndAssertMultipleMappings(
+                "mapping_parser/eof/multipleRowsExpected.json",
+                "mapping_parser/eof/multipleRowsInput.csv",
+                NameDTO.class,
+                true
+        );
+    }
+
+    @Test
+    void shouldRecognizeHeaderOnlyInput() {
+        loadAndAssertMultipleMappings(
+                "mapping_parser/eof/headerOnlyExpected.json",
+                "mapping_parser/eof/headerOnlyInput.csv",
+                NameDTO.class,
+                true
+        );
+    }
 }
