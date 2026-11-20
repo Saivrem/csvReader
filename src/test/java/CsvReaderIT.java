@@ -6,26 +6,26 @@ public class CsvReaderIT extends BaseIT {
 
     @Test
     public void shouldCorrectlyReadSimpleCsv() {
-        loadAndAssert("happyPath/expected.json", "happyPath/input.csv");
+        loadAndAssert("base_parser/happyPath/expected.json", "base_parser/happyPath/input.csv");
     }
 
     @Test
     public void shouldProcessTextEnclosure() {
-        loadAndAssert("happyPath/textEnclosure/simpleExpected.json", "happyPath/textEnclosure/simpleInput.csv");
-        loadAndAssert("happyPath/textEnclosure/allEnclosedExpected.json", "happyPath/textEnclosure/allEnclosedInput.csv");
-        loadAndAssert("happyPath/textEnclosure/lineSeparatedExpected.json", "happyPath/textEnclosure/lineSeparatedInput.csv");
-        loadAndAssert("happyPath/textEnclosure/emptyStringExpected.json", "happyPath/textEnclosure/emptyStringInput.csv");
+        loadAndAssert("base_parser/happyPath/textEnclosure/simpleExpected.json", "base_parser/happyPath/textEnclosure/simpleInput.csv");
+        loadAndAssert("base_parser/happyPath/textEnclosure/allEnclosedExpected.json", "base_parser/happyPath/textEnclosure/allEnclosedInput.csv");
+        loadAndAssert("base_parser/happyPath/textEnclosure/lineSeparatedExpected.json", "base_parser/happyPath/textEnclosure/lineSeparatedInput.csv");
+        loadAndAssert("base_parser/happyPath/textEnclosure/emptyStringExpected.json", "base_parser/happyPath/textEnclosure/emptyStringInput.csv");
     }
 
     @Test
     public void shouldProcessEscapeCharacter() {
-        loadAndAssert("happyPath/escapeCharacter/simpleExpected.json", "happyPath/escapeCharacter/simpleInput.csv");
-        loadAndAssert("happyPath/escapeCharacter/enclosedAndEscapedExpected.json", "happyPath/escapeCharacter/enclosedAndEscapedInput.csv");
+        loadAndAssert("base_parser/happyPath/escapeCharacter/simpleExpected.json", "base_parser/happyPath/escapeCharacter/simpleInput.csv");
+        loadAndAssert("base_parser/happyPath/escapeCharacter/enclosedAndEscapedExpected.json", "base_parser/happyPath/escapeCharacter/enclosedAndEscapedInput.csv");
     }
 
     @Test
     public void shouldProcessMultiline() {
-        loadAndAssertMultiline("multiline/simpleExpected.json", "multiline/simpleInput.csv");
-        loadAndAssertMultiline("multiline/escapedExpected.json", "multiline/escapedInput.csv");
+        loadAndAssertMultiline("base_parser/multiline/simpleExpected.json", "base_parser/multiline/simpleInput.csv");
+        loadAndAssertMultiline("base_parser/multiline/escapedExpected.json", "base_parser/multiline/escapedInput.csv");
     }
 }
